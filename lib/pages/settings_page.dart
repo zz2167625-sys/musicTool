@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../app_info.dart';
 import '../models/music_source.dart';
+import '../models/song.dart';
+import '../services/local_music.dart';
+import '../services/play_utils.dart';
 import '../services/source_manager.dart';
+import '../widgets/song_tile.dart';
+import '../widgets/update_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,6 +27,14 @@ class _SettingsPageState extends State<SettingsPage> {
         SnackBar(content: Text('已添加音乐源：$result')),
       );
     }
+  }
+
+  Future<void> _importMp3() async {
+    final count = await LocalMusicManager.instance.importMp3();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(count > 0 ? '已导入 $count 首本地音乐' : '未选择文件')),
+    );
   }
 
   void _showDisclaimer() {
@@ -56,9 +70,11 @@ class _SettingsPageState extends State<SettingsPage> {
         label: const Text('导入音乐源'),
       ),
       body: AnimatedBuilder(
-        animation: SourceManager.instance,
+        animation: Listenable.merge(
+            [SourceManager.instance, LocalMusicManager.instance]),
         builder: (context, _) {
           final sources = SourceManager.instance.sources;
+          final localSongs = LocalMusicManager.instance.songs;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -96,6 +112,50 @@ class _SettingsPageState extends State<SettingsPage> {
               else
                 ...sources.map((source) => _SourceCard(source: source)),
               const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '本地音乐',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    '${localSongs.length} 首',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.library_music_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('导入 MP3'),
+                  subtitle: const Text('从设备选择 MP3 文件，复制到应用内并离线播放'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _importMp3,
+                ),
+              ),
+              if (localSongs.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                ...localSongs.map(
+                  (song) => _LocalSongTile(
+                    song: song,
+                    onTap: () => PlayUtils.playSongs(localSongs, localSongs.indexOf(song)),
+                    onDelete: () =>
+                        LocalMusicManager.instance.removeSong(song),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
               Text(
                 '关于',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -105,8 +165,15 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 8),
               const ListTile(
                 leading: Icon(Icons.info_outline),
-                title: Text('音乐盒子 musicTool'),
-                subtitle: Text('版本 1.0.0'),
+                title: Text(AppInfo.name),
+                subtitle: Text('版本 ${AppInfo.version}'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.system_update_outlined),
+                title: const Text('检查更新'),
+                subtitle: const Text('发现新版本时提示下载'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => checkForUpdates(context),
               ),
               ListTile(
                 leading: const Icon(Icons.gavel_outlined),
@@ -176,6 +243,34 @@ class _SourceCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LocalSongTile extends StatelessWidget {
+  const _LocalSongTile({
+    required this.song,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final Song song;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: SongTile(
+        song: song,
+        onTap: onTap,
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          tooltip: '删除',
+          onPressed: onDelete,
         ),
       ),
     );

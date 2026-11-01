@@ -1,0 +1,27 @@
+{
+  "name": "iTunes 试听",
+  "version": "1.0.0",
+  "baseUrl": "https://itunes.apple.com",
+  "headers": {},
+  "search": {
+    "path": "/search",
+    "method": "GET",
+    "keywordParam": "term",
+    "params": {
+      "media": "music",
+      "limit": "30"
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "results",
+    "id": "trackId",
+    "title": "trackName",
+    "artist": "artistName",
+    "album": "collectionName",
+    "cover": "artworkUrl100",
+    "url": "previewUrl",
+    "duration": "trackTimeMillis",
+    "durationUnit": "ms"
+  }
+}

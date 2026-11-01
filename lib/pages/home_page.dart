@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('音乐盒子'),
+        title: const Text('zephyr'),
         centerTitle: false,
       ),
       body: AnimatedBuilder(
