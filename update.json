@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
+  "version": "1.6.1",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 新增内置「酷我 完整歌曲」「酷狗 完整歌曲」音乐源：免登录即可完整播放大量曲目（含热门歌，VIP 独占曲目除外）\n2. 取链接口支持纯文本响应，时长兼容字符串格式"
+  "notes": "1. 修复更新提示：更新检查改为多地址回退（Cloudflare/jsDelivr/raw），国内网络也能收到更新\n2. 内置酷我/酷狗完整歌曲源（免登录完整播放，v1.6.0 引入）"
 }

@@ -20,27 +20,28 @@ class UpdateChecker {
   static const _timeout = Duration(seconds: 10);
 
   /// 检查远端更新。有新版本返回 [UpdateInfo]，否则返回 null。
+  /// 依次尝试 [AppInfo.updateUrls] 中的地址，任一可达即可（适配国内网络）；
   /// 网络错误、地址未配置、格式非法一律按「无更新」处理，不打扰用户。
   static Future<UpdateInfo?> check() async {
-    if (AppInfo.updateUrl.isEmpty) return null;
-    try {
-      final resp = await http
-          .get(Uri.parse(AppInfo.updateUrl))
-          .timeout(_timeout);
-      if (resp.statusCode != 200) return null;
-      final json = jsonDecode(utf8.decode(resp.bodyBytes));
-      if (json is! Map) return null;
-      final remoteVersion = json['version']?.toString().trim() ?? '';
-      if (remoteVersion.isEmpty) return null;
-      if (!isNewer(remoteVersion, AppInfo.version)) return null;
-      return UpdateInfo(
-        version: remoteVersion,
-        url: json['url']?.toString().trim() ?? '',
-        notes: json['notes']?.toString().trim() ?? '',
-      );
-    } catch (_) {
-      return null;
+    for (final url in AppInfo.updateUrls) {
+      try {
+        final resp = await http.get(Uri.parse(url)).timeout(_timeout);
+        if (resp.statusCode != 200) continue;
+        final json = jsonDecode(utf8.decode(resp.bodyBytes));
+        if (json is! Map) return null;
+        final remoteVersion = json['version']?.toString().trim() ?? '';
+        if (remoteVersion.isEmpty) return null;
+        if (!isNewer(remoteVersion, AppInfo.version)) return null;
+        return UpdateInfo(
+          version: remoteVersion,
+          url: json['url']?.toString().trim() ?? '',
+          notes: json['notes']?.toString().trim() ?? '',
+        );
+      } catch (_) {
+        // 该地址不可达，尝试下一个
+      }
     }
+    return null;
   }
 
   /// 按数字段比较版本号，如 1.2.0 < 1.10.1。

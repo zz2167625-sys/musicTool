@@ -70,6 +70,22 @@ function recordFail(ip) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.endsWith('/update.json')) {
+      const upstream =
+        'https://raw.githubusercontent.com/zz2167625-sys/musicTool/main/update.json';
+      try {
+        const resp = await fetch(upstream, { cf: { cacheTtl: 300 } });
+        return new Response(resp.body, {
+          status: resp.status,
+          headers: {
+            'content-type': 'application/json',
+            'cache-control': 'public, max-age=300',
+          },
+        });
+      } catch {
+        return json(502, { ok: false, error: 'upstream_unavailable' });
+      }
+    }
     if (!url.pathname.endsWith('/auth')) {
       return json(404, { ok: false, error: 'not_found' });
     }
