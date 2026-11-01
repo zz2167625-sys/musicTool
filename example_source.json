@@ -1,0 +1,24 @@
+{
+  "name": "示例音乐源",
+  "version": "1.0.0",
+  "baseUrl": "https://your-music-api.example.com",
+  "headers": {},
+  "search": {
+    "path": "/search",
+    "method": "GET",
+    "keywordParam": "keywords",
+    "params": {},
+    "body": {}
+  },
+  "mapping": {
+    "list": "result.songs",
+    "id": "id",
+    "title": "name",
+    "artist": "artists",
+    "album": "album.name",
+    "cover": "picUrl",
+    "url": "url",
+    "duration": "duration",
+    "durationUnit": "ms"
+  }
+}
