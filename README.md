@@ -7,6 +7,7 @@
 ## 功能特性
 
 - 多源聚合搜索：同时搜索多个音乐源，结果合并展示，来源一目了然
+- 登录保护：启动需登录，全应用仅一个唯一账号（凭据定义在 lib/services/auth.dart），「我的」→「退出登录」
 - 本地音乐导入：从设备选择 MP3 文件，复制到应用内，离线播放（「我的」→「本地音乐」）
 - 后台播放：锁屏/切后台继续播放，通知栏直接控制（audio_service）
 - 收藏与最近播放：本地持久化保存
@@ -105,13 +106,18 @@ python tools/music_source_scraper.py --app-assets   # 把当前音乐源同步�
 
 App 启动 3 秒后自动检查远端 `update.json`，发现新版本时弹窗提示（含更新说明与下载链接复制）；也可在「我的」→「检查更新」手动检查。
 
-- 版本与地址常量见 [lib/app_info.dart](lib/app_info.dart)：`version` 与 pubspec.yaml 保持一致
-- 本仓库为私有仓库，匿名无法读取 raw 链接，因此 `updateUrl` 指向**公开 Gist**
-  `https://gist.githubusercontent.com/zz2167625-sys/<gist_id>/raw/update.json`，
-  仓库私有化不影响更新检查
-- 每次发版时更新 Gist 中 update.json 的 `version`（大于 App 内版本）、`url`（下载地址）与 `notes`（更新说明）
-- 仓库根目录 [update.json](update.json) 为模板，发版后同步一份内容到 Gist 即可
-- 下载地址 `https://github.com/zz2167625-sys/musicTool/releases/latest` 仅仓库所有者登录后可访问
+- 版本与地址常量见 [lib/app_info.dart](lib/app_info.dart)：`version` 与 pubspec.yaml 保持一致，`updateUrl` 指向仓库 raw 链接
+- 仓库根目录 [update.json](update.json) 为模板：每次发版时把 `version` 改为大于 App 内版本的新版本号，`url` 填下载地址，`notes` 写更新说明
+- 仓库公开，raw 链接可直接匿名访问：
+  `https://raw.githubusercontent.com/<用户名>/<仓库名>/main/update.json`
+- 下载地址 `https://github.com/zz2167625-sys/musicTool/releases/latest` 指向最新 Release 页面
+
+## 登录
+
+App 启动后需登录，全应用仅一个唯一账号，凭据定义在
+[lib/services/auth.dart](lib/services/auth.dart) 的 `Auth.username` / `Auth.password`
+常量中（修改后重新构建 APK 生效）。登录状态保存在本机，下次启动自动登录；
+可在「我的」→「退出登录」注销。
 
 ## 应用图标
 

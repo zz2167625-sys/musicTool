@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'app_info.dart';
 import 'pages/home_shell.dart';
+import 'pages/login_page.dart';
+import 'services/auth.dart';
 import 'services/local_music.dart';
 import 'services/local_store.dart';
 import 'services/player_handler.dart';
@@ -29,7 +31,7 @@ Future<void> main() async {
       androidStopForegroundOnPause: true,
     ),
   );
-  runApp(const MusicToolApp());
+  runApp(MusicToolApp(loggedIn: await Auth.isLoggedIn()));
   unawaited(_autoCheckUpdate());
 }
 
@@ -45,7 +47,9 @@ Future<void> _autoCheckUpdate() async {
 }
 
 class MusicToolApp extends StatelessWidget {
-  const MusicToolApp({super.key});
+  const MusicToolApp({super.key, required this.loggedIn});
+
+  final bool loggedIn;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +66,7 @@ class MusicToolApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFF121212),
       ),
-      home: const HomeShell(),
+      home: loggedIn ? const HomeShell() : const LoginPage(),
     );
   }
 }

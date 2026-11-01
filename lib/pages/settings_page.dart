@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../app_info.dart';
 import '../models/music_source.dart';
 import '../models/song.dart';
+import '../services/auth.dart';
 import '../services/local_music.dart';
 import '../services/play_utils.dart';
 import '../services/source_manager.dart';
 import '../widgets/song_tile.dart';
+import 'login_page.dart';
 import '../widgets/update_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -34,6 +36,33 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(count > 0 ? '已导入 $count 首本地音乐' : '未选择文件')),
+    );
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('退出后需要重新输入账号密码才能使用。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('退出'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await Auth.setLoggedIn(false);
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
     );
   }
 
@@ -180,6 +209,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('免责声明'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: _showDisclaimer,
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('退出登录'),
+                subtitle: const Text('退出后需重新输入账号密码'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _logout,
               ),
             ],
           );

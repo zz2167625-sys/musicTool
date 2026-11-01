@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 内置 iTunes / Deezer 公开试听音乐源，开箱即可搜索网络音乐\n2. Python 抓取工具新增搜索与下载：--search 关键词 / --download / --app-assets\n3. 更新通道迁移至公开 Gist，仓库私有化后更新提示不受影响"
+  "notes": "1. 新增登录界面：仅唯一账号可登录使用，支持退出登录\n2. 更新通道恢复为仓库 raw 链接，仓库保持公开"
 }

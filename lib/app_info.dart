@@ -6,11 +6,11 @@ class AppInfo {
   AppInfo._();
 
   static const name = 'zephyr';
-  static const version = '1.3.0';
+  static const version = '1.4.0';
 
-  /// 远端更新信息地址（公开 Gist，仓库私有化后仍可匿名访问）：
-  /// {"version": "1.3.1", "url": "https://...", "notes": "更新说明"}
-  /// 发布新版时更新 Gist 中的 update.json 即可，App 会据此判断并提示。
+  /// 远端更新信息地址（仓库公开，App 匿名访问 raw 链接）：
+  /// {"version": "1.4.1", "url": "https://...", "notes": "更新说明"}
+  /// 发布新版时更新仓库根目录 update.json 即可，App 会据此判断并提示。
   static const updateUrl =
-      'https://gist.githubusercontent.com/zz2167625-sys/2bd9e8f419b263f4c3c0d5009854c0f0/raw/update.json';
+      'https://raw.githubusercontent.com/zz2167625-sys/musicTool/main/update.json';
 }
