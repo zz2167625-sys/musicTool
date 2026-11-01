@@ -17,6 +17,7 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SourceManager.instance.load();
+  await SourceManager.instance.seedBuiltInSources();
   await LocalStore.instance.load();
   await LocalMusicManager.instance.load();
   await AudioService.init(

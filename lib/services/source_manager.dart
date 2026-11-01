@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +13,14 @@ class SourceManager extends ChangeNotifier {
   static final SourceManager instance = SourceManager._();
 
   static const _key = 'music_sources';
+  static const _seededKey = 'builtin_sources_seeded_v1';
+
+  /// 内置音乐源（由 tools/music_source_scraper.py 抓取，随 App 打包）。
+  /// 首次启动自动导入；用户删除后不会被再次添加。
+  static const _builtInAssets = [
+    'assets/sources/iTunes_试听.json',
+    'assets/sources/Deezer_试听.json',
+  ];
 
   final List<MusicSource> _sources = [];
 
@@ -33,6 +42,27 @@ class SourceManager extends ChangeNotifier {
       _sources.clear();
     }
     notifyListeners();
+  }
+
+  /// 首次启动时导入随 App 打包的内置音乐源；之后不再自动注入。
+  Future<void> seedBuiltInSources() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_seededKey) == true) return;
+    var added = false;
+    for (final asset in _builtInAssets) {
+      try {
+        final data = await rootBundle.loadString(asset);
+        final source = parseSourceJson(data);
+        if (source != null && byName(source.name) == null) {
+          _sources.add(source);
+          added = true;
+        }
+      } catch (_) {}
+    }
+    await prefs.setBool(_seededKey, true);
+    if (added) {
+      await _save();
+    }
   }
 
   Future<void> _save() async {

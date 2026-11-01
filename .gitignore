@@ -51,3 +51,7 @@ app.*.map.json
 tools/.scraper_cache/
 tools/__pycache__/
 __pycache__/
+
+# 抓取工具生成的搜索结果与下载文件
+tools/scraped_songs.json
+tools/scraped_files/

@@ -7,6 +7,9 @@ sources/ 目录，供「音乐盒子」App 通过链接或粘贴 JSON 的方式�
 
 用法：
   python music_source_scraper.py                        # 搜索并保存所有可用音乐源
+  python music_source_scraper.py --search 周杰伦        # 用全部音乐源搜歌，结果存 scraped_songs.json
+  python music_source_scraper.py --search 周杰伦 --download  # 同时下载试听文件到 scraped_files/
+  python music_source_scraper.py --app-assets           # 把当前音乐源同步到 App 内置资源目录
   python music_source_scraper.py --repo owner/name      # 扫描指定仓库（GitHub/Gitee）
   python music_source_scraper.py --url https://x/s.json # 抓取并校验单个文件
   python music_source_scraper.py --test                 # 搜索后对每个源做真实搜索测试
@@ -489,6 +492,238 @@ def test_source(source, keyword="周杰伦", timeout=12):
         return False, 0
 
 
+def search_source(source, keyword, timeout=15):
+    """按音乐源配置执行一次搜索，返回解析后的 JSON；失败返回 None。"""
+    s = source["search"]
+    try:
+        url = source["baseUrl"] + s["path"]
+        headers = dict(source.get("headers") or {})
+        headers["User-Agent"] = UA
+        if s["method"] == "POST":
+            body = {s["keywordParam"]: keyword, **s["body"]}
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(body).encode("utf-8"),
+                headers={**headers, "Content-Type": "application/json"},
+            )
+        else:
+            query = {k: str(v) for k, v in s["params"].items()}
+            query[s["keywordParam"]] = keyword
+            url = url + "?" + urllib.parse.urlencode(query)
+            req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8", errors="replace"))
+    except Exception as e:
+        warn(f"{source['name']} 搜索失败：{e}")
+        return None
+
+
+def get_path(data, path):
+    """按点号路径取值，与 App 内 json_utils.getPath 行为一致（支持列表下标）。"""
+    if not path:
+        return data
+    cur = data
+    for part in path.split("."):
+        if isinstance(cur, dict):
+            cur = cur.get(part)
+        elif isinstance(cur, list):
+            try:
+                cur = cur[int(part)]
+            except (ValueError, IndexError):
+                return None
+        else:
+            return None
+    return cur
+
+
+def as_text(v):
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v
+    if isinstance(v, (int, float, bool)):
+        return str(v)
+    return ""
+
+
+def artist_text(v):
+    if v is None:
+        return ""
+    if isinstance(v, list):
+        return " / ".join(s for s in (artist_text(x) for x in v) if s)
+    if isinstance(v, dict):
+        for key in ("name", "nickname", "title", "username"):
+            if v.get(key) is not None:
+                return as_text(v[key])
+        return ""
+    return as_text(v)
+
+
+def album_text(v):
+    if isinstance(v, dict):
+        for key in ("name", "title"):
+            if v.get(key) is not None:
+                return as_text(v[key])
+        return ""
+    return as_text(v)
+
+
+def resolve_url(base_url, raw):
+    if not raw:
+        return ""
+    if raw.startswith("//"):
+        return "https:" + raw
+    return urllib.parse.urljoin(base_url + "/", raw)
+
+
+def extract_songs(source, data):
+    """从搜索响应中提取歌曲列表，与 App 内 json_utils.extractSongs 逻辑一致。"""
+    m = source["mapping"]
+    lst = get_path(data, m.get("list", ""))
+    if not isinstance(lst, list):
+        return []
+    songs = []
+    for item in lst:
+        if not isinstance(item, dict):
+            continue
+        song_id = as_text(get_path(item, m.get("id", "")))
+        title = as_text(get_path(item, m.get("title", "")))
+        raw_url = as_text(get_path(item, m.get("url", "")))
+        if not song_id or not title or not raw_url:
+            continue
+        duration = None
+        d = get_path(item, m.get("duration", ""))
+        if isinstance(d, (int, float)):
+            duration = round(d / 1000) if m.get("durationUnit") == "ms" else round(d)
+        raw_cover = as_text(get_path(item, m.get("cover", "")))
+        songs.append(
+            {
+                "id": song_id,
+                "title": title,
+                "artist": artist_text(get_path(item, m.get("artist", ""))),
+                "album": album_text(get_path(item, m.get("album", ""))),
+                "cover": resolve_url(source["baseUrl"], raw_cover) if raw_cover else "",
+                "url": resolve_url(source["baseUrl"], raw_url),
+                "duration": duration,
+                "source": source["name"],
+            }
+        )
+    return songs
+
+
+def load_local_sources():
+    """读取 sources/ 目录中已保存的音乐源，返回规范化后的列表。"""
+    sources = []
+    if not OUTPUT_DIR.exists():
+        return sources
+    for f in sorted(OUTPUT_DIR.glob("*.json")):
+        try:
+            obj = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        src = normalize_source(obj)
+        if src:
+            sources.append(src)
+    return sources
+
+
+def download_binary(url, timeout=30):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read()
+    except Exception:
+        return None
+
+
+def run_search_songs(keyword, download=False):
+    """用所有本地音乐源搜索歌曲，结果写入 scraped_songs.json。"""
+    sources = load_local_sources()
+    if not sources:
+        log("sources/ 目录没有有效的音乐源，请先运行一次抓取（不带 --search）")
+        return 1
+    log(f"[搜索] 关键词「{keyword}」，共 {len(sources)} 个音乐源\n")
+    seen = set()
+    songs = []
+    for src in sources:
+        log(f"[来源] {src['name']}")
+        data = search_source(src, keyword)
+        if data is None:
+            continue
+        found = extract_songs(src, data)
+        log(f"  命中 {len(found)} 首")
+        for song in found:
+            key = (song["title"], song["artist"])
+            if key in seen:
+                continue
+            seen.add(key)
+            songs.append(song)
+    if not songs:
+        log("没有搜到任何歌曲")
+        return 1
+
+    if download:
+        log(f"\n[下载] 开始下载 {len(songs)} 个试听文件…")
+        files_dir = SCRIPT_DIR / "scraped_files"
+        files_dir.mkdir(exist_ok=True)
+        ok = 0
+        for i, song in enumerate(songs, 1):
+            raw = song["url"]
+            if not raw.startswith(("http://", "https://")):
+                continue
+            data = download_binary(raw)
+            if data is None:
+                log(f"  [{i}/{len(songs)}] 下载失败：{song['title']}")
+                continue
+            ext = Path(urllib.parse.urlparse(raw).path).suffix or ".mp3"
+            stem = sanitize_filename(f"{song['artist']} - {song['title']}")[:60]
+            name = f"{stem}_{hashlib.md5(raw.encode('utf-8')).hexdigest()[:8]}{ext}"
+            (files_dir / name).write_bytes(data)
+            song["url"] = f"scraped_files/{name}"
+            ok += 1
+            log(f"  [{i}/{len(songs)}] 已保存：{name}")
+        log(f"\n[下载] 成功 {ok}/{len(songs)}")
+
+    out = {
+        "keyword": keyword,
+        "generatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "count": len(songs),
+        "songs": songs,
+    }
+    path = SCRIPT_DIR / "scraped_songs.json"
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    log(f"\n已保存 {len(songs)} 首到 {path}")
+    if download:
+        log(f"音频文件位于 {SCRIPT_DIR / 'scraped_files'}")
+    return 0
+
+
+def sync_app_assets():
+    """把 sources/ 中的音乐源同步到 App 内置资源目录 assets/sources/。"""
+    if not OUTPUT_DIR.exists():
+        log("sources/ 目录不存在，请先运行一次抓取")
+        return 1
+    assets_dir = SCRIPT_DIR.parent / "assets" / "sources"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    copied = 0
+    for f in sorted(OUTPUT_DIR.glob("*.json")):
+        try:
+            obj = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        src = normalize_source(obj)
+        if src is None:
+            continue
+        (assets_dir / f.name).write_text(
+            json.dumps(src, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        copied += 1
+        log(f"  + {f.name}")
+    log(f"\n已同步 {copied} 个音乐源到 {assets_dir}")
+    log("重新构建 App 后，开箱即用即可搜索这些源")
+    return 0
+
+
 def sanitize_filename(name):
     cleaned = re.sub(r'[\\/:*?"<>|\s]+', "_", name).strip("_")
     return cleaned or "source"
@@ -660,6 +895,12 @@ def main():
     parser.add_argument("--repo", help="扫描指定仓库，如 owner/name")
     parser.add_argument("--url", help="抓取并校验单个音乐源 JSON 文件")
     parser.add_argument("--test", action="store_true", help="对找到的源做真实搜索测试")
+    parser.add_argument("--search", metavar="KEYWORD",
+                        help="用 sources/ 中的音乐源搜索歌曲，结果存 scraped_songs.json")
+    parser.add_argument("--download", action="store_true",
+                        help="与 --search 联用：下载试听音频到 scraped_files/")
+    parser.add_argument("--app-assets", action="store_true",
+                        help="把 sources/ 中的音乐源同步到 App 内置资源 assets/sources/")
     parser.add_argument("--print", action="store_true", help="打印每个源的 JSON 文本")
     parser.add_argument("--serve", nargs="?", const=8000, type=int, metavar="PORT",
                         help="启动本地 HTTP 服务（默认端口 8000）")
@@ -669,6 +910,13 @@ def main():
     parser.add_argument("--max-repos", type=int, default=MAX_REPOS_PER_RUN)
     parser.add_argument("--verbose", action="store_true", help="输出更多调试信息")
     args = parser.parse_args()
+
+    if args.download and not args.search:
+        parser.error("--download 需要与 --search 联用")
+    if args.app_assets:
+        return sync_app_assets()
+    if args.search:
+        return run_search_songs(args.search, download=args.download)
 
     collector = SourceCollector(token=args.token, test=args.test, verbose=args.verbose)
 

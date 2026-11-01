@@ -91,20 +91,27 @@ python tools/music_source_scraper.py --test         # 对每个源做真实搜�
 python tools/music_source_scraper.py --print        # 打印 JSON，可直接粘贴到 App
 python tools/music_source_scraper.py --serve 8000   # 启动本地 HTTP 服务
 python tools/music_source_scraper.py --no-templates # 不生成内置模板
+python tools/music_source_scraper.py --search 周杰伦      # 用所有源搜歌，结果存 scraped_songs.json
+python tools/music_source_scraper.py --search 周杰伦 --download  # 同时下载试听音频到 scraped_files/
+python tools/music_source_scraper.py --app-assets   # 把当前音乐源同步到 App 内置资源 assets/sources/
 ```
 
 手机与电脑在同一局域网时，运行 `--serve` 后按提示用
 「我的 → 导入音乐源 → 从链接导入」填写 `http://<电脑IP>:8000/<文件>.json` 即可。
 抓取到的源保存在 `tools/sources/` 目录，可自行审查后使用。
+运行 `--app-assets` 后重新构建 App，内置音乐源即更新（开箱即可搜索，无需导入）。
 
 ## 应用更新提示
 
 App 启动 3 秒后自动检查远端 `update.json`，发现新版本时弹窗提示（含更新说明与下载链接复制）；也可在「我的」→「检查更新」手动检查。
 
-- 版本与地址常量见 [lib/app_info.dart](lib/app_info.dart)：`version` 与 pubspec.yaml 保持一致，`updateUrl` 指向你托管的 update.json
-- 仓库根目录 [update.json](update.json) 为模板：每次发版时把 `version` 改为大于 App 内版本的新版本号，`url` 填下载地址，`notes` 写更新说明
-- 建议把仓库推到 GitHub 后使用 raw 链接，例如
-  `https://raw.githubusercontent.com/<用户名>/<仓库名>/main/update.json`
+- 版本与地址常量见 [lib/app_info.dart](lib/app_info.dart)：`version` 与 pubspec.yaml 保持一致
+- 本仓库为私有仓库，匿名无法读取 raw 链接，因此 `updateUrl` 指向**公开 Gist**
+  `https://gist.githubusercontent.com/zz2167625-sys/<gist_id>/raw/update.json`，
+  仓库私有化不影响更新检查
+- 每次发版时更新 Gist 中 update.json 的 `version`（大于 App 内版本）、`url`（下载地址）与 `notes`（更新说明）
+- 仓库根目录 [update.json](update.json) 为模板，发版后同步一份内容到 Gist 即可
+- 下载地址 `https://github.com/zz2167625-sys/musicTool/releases/latest` 仅仓库所有者登录后可访问
 
 ## 应用图标
 
