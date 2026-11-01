@@ -111,8 +111,15 @@ class HomePage extends StatelessWidget {
                 ...recents.map(
                   (song) => SongTile(
                     song: song,
-                    onTap: () =>
-                        PlayUtils.playSongs(recents, recents.indexOf(song)),
+                    onTap: () async {
+                      final i = recents.indexOf(song);
+                      if (!await PlayUtils.playSongs(recents, i) &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('无法获取播放地址')),
+                        );
+                      }
+                    },
                   ),
                 ),
             ],

@@ -178,7 +178,15 @@ class _SettingsPageState extends State<SettingsPage> {
                 ...localSongs.map(
                   (song) => _LocalSongTile(
                     song: song,
-                    onTap: () => PlayUtils.playSongs(localSongs, localSongs.indexOf(song)),
+                    onTap: () async {
+                      if (!await PlayUtils.playSongs(
+                              localSongs, localSongs.indexOf(song)) &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('无法获取播放地址')),
+                        );
+                      }
+                    },
                     onDelete: () =>
                         LocalMusicManager.instance.removeSong(song),
                   ),

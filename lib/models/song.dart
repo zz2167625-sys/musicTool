@@ -23,6 +23,17 @@ class Song {
 
   String get uid => '$sourceName::$id';
 
+  Song copyWith({String? url}) => Song(
+        id: id,
+        title: title,
+        artist: artist,
+        album: album,
+        cover: cover,
+        url: url ?? this.url,
+        duration: duration,
+        sourceName: sourceName,
+      );
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,

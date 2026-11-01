@@ -47,6 +47,30 @@ String albumText(dynamic v) {
   return asText(v);
 }
 
+/// 用 values 中的字段值替换模板中的 {field} 占位符。
+String substituteFields(String template, Map<String, String> values) {
+  final matches = RegExp(r'\{([^{}]+)\}').allMatches(template);
+  var out = template;
+  for (final m in matches) {
+    final field = m.group(1)!;
+    final value = values[field] ?? '';
+    out = out.replaceAll('{$field}', Uri.encodeComponent(value));
+  }
+  return out;
+}
+
+/// 将 URL 模板（如 https://x/song?id={id}）按歌曲条目字段解析为完整 URL。
+String? resolveTemplateUrl(String template, Map<dynamic, dynamic> item) {
+  if (template.isEmpty) return null;
+  final values = <String, String>{};
+  final matches = RegExp(r'\{([^{}]+)\}').allMatches(template);
+  for (final m in matches) {
+    values[m.group(1)!] = asText(getPath(item, m.group(1)!));
+  }
+  final result = substituteFields(template, values);
+  return result.isEmpty ? null : result;
+}
+
 Song? extractSong(
   dynamic item,
   Mapping mapping,
@@ -56,8 +80,23 @@ Song? extractSong(
   if (item is! Map) return null;
   final id = asText(getPath(item, mapping.id));
   final title = asText(getPath(item, mapping.title));
+  if (id.isEmpty || title.isEmpty) return null;
+
   final rawUrl = asText(getPath(item, mapping.url));
-  if (id.isEmpty || title.isEmpty || rawUrl.isEmpty) return null;
+  String url;
+  if (rawUrl.isNotEmpty) {
+    url = resolveUrl(rawUrl);
+  } else {
+    final fromTemplate = resolveTemplateUrl(mapping.urlTemplate, item);
+    if (fromTemplate != null) {
+      url = resolveUrl(fromTemplate);
+    } else if (mapping.urlResolve != null) {
+      // 播放地址需二次请求（urlResolve），此处留空，播放时再解析。
+      url = '';
+    } else {
+      return null;
+    }
+  }
 
   int? duration;
   final d = getPath(item, mapping.duration);
@@ -72,7 +111,7 @@ Song? extractSong(
     artist: artistText(getPath(item, mapping.artist)),
     album: albumText(getPath(item, mapping.album)),
     cover: rawCover.isEmpty ? '' : resolveUrl(rawCover),
-    url: resolveUrl(rawUrl),
+    url: url,
     duration: duration,
     sourceName: sourceName,
   );

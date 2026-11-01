@@ -109,7 +109,15 @@ class _SearchPageState extends State<SearchPage> {
                         itemCount: _results.length,
                         itemBuilder: (context, i) => SongTile(
                           song: _results[i],
-                          onTap: () => PlayUtils.playSongs(_results, i),
+                          onTap: () async {
+                            if (!await PlayUtils.playSongs(_results, i) &&
+                                context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('无法获取播放地址')),
+                              );
+                            }
+                          },
                         ),
                       ),
           ),

@@ -44,6 +44,35 @@ class SearchConfig {
       };
 }
 
+class UrlResolveConfig {
+  final String path;
+  final String method;
+  final String urlPath;
+  final Map<String, dynamic> body;
+
+  const UrlResolveConfig({
+    required this.path,
+    required this.method,
+    required this.urlPath,
+    required this.body,
+  });
+
+  factory UrlResolveConfig.fromJson(Map<String, dynamic> json) =>
+      UrlResolveConfig(
+        path: json['path']?.toString() ?? '',
+        method: (json['method']?.toString() ?? 'GET').toUpperCase(),
+        urlPath: json['urlPath']?.toString() ?? '',
+        body: _asMap(json['body']),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'path': path,
+        'method': method,
+        'urlPath': urlPath,
+        'body': body,
+      };
+}
+
 class Mapping {
   final String list;
   final String id;
@@ -52,6 +81,8 @@ class Mapping {
   final String album;
   final String cover;
   final String url;
+  final String urlTemplate;
+  final UrlResolveConfig? urlResolve;
   final String duration;
   final String durationUnit;
 
@@ -63,6 +94,8 @@ class Mapping {
     required this.album,
     required this.cover,
     required this.url,
+    required this.urlTemplate,
+    required this.urlResolve,
     required this.duration,
     required this.durationUnit,
   });
@@ -75,6 +108,11 @@ class Mapping {
         album: json['album']?.toString() ?? 'album',
         cover: json['cover']?.toString() ?? 'picUrl',
         url: json['url']?.toString() ?? 'url',
+        urlTemplate: json['urlTemplate']?.toString() ?? '',
+        urlResolve: json['urlResolve'] is Map
+            ? UrlResolveConfig.fromJson(
+                (json['urlResolve'] as Map).cast<String, dynamic>())
+            : null,
         duration: json['duration']?.toString() ?? 'duration',
         durationUnit: (json['durationUnit']?.toString() ?? 's').toLowerCase(),
       );
@@ -87,6 +125,8 @@ class Mapping {
         'album': album,
         'cover': cover,
         'url': url,
+        'urlTemplate': urlTemplate,
+        if (urlResolve != null) 'urlResolve': urlResolve!.toJson(),
         'duration': duration,
         'durationUnit': durationUnit,
       };

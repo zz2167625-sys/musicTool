@@ -1,0 +1,28 @@
+{
+  "name": "Jamendo 完整歌曲",
+  "version": "1.0.0",
+  "baseUrl": "https://api.jamendo.com",
+  "headers": {},
+  "search": {
+    "path": "/v3.0/tracks/",
+    "method": "GET",
+    "keywordParam": "search",
+    "params": {
+      "client_id": "YOUR_CLIENT_ID",
+      "format": "json",
+      "limit": 30
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "results",
+    "id": "id",
+    "title": "name",
+    "artist": "artist_name",
+    "album": "album_name",
+    "cover": "image",
+    "url": "audio",
+    "duration": "duration",
+    "durationUnit": "s"
+  }
+}

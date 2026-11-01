@@ -67,9 +67,47 @@ flutter build apk --release
 - `mapping.list`：搜索响应中歌曲数组所在路径（点号分隔，留空表示整个响应）
 - `mapping.durationUnit`：时长单位，`s`（秒）或 `ms`（毫秒）
 - 歌曲的 `url` / `cover` 支持相对路径，会基于 `baseUrl` 自动解析
+- `mapping.urlTemplate`：可选，播放地址模板，如 `https://x.com/song?id={id}.mp3`，
+  `{字段}` 会按条目字段解析（适合播放地址可由 ID 直接拼出的 API）
+- `mapping.urlResolve`：可选，播放地址需二次请求时使用，结构如下；
+  请求路径/body 中的 `{字段}` 同样按歌曲字段解析，响应中取 `urlPath` 指向的地址
+  ```json
+  "urlResolve": {
+    "path": "/song/url/v1?id={id}&level=standard",
+    "method": "GET",
+    "urlPath": "data.0.url",
+    "body": {}
+  }
+  ```
+- 三种地址来源优先级：`url` 字段 → `urlTemplate` → `urlResolve`（播放时异步解析，结果缓存 10 分钟）
 - `headers` 会同时用于搜索请求与播放请求
 
 导入方式：打开应用 → 「我的」→ 右下角「导入音乐源」→ 粘贴 JSON 或填写 JSON 链接。
+
+## 完整歌曲播放
+
+内置的 iTunes / Deezer 源来自官方**试听接口**，只能播放 30 秒片段。
+完整歌曲可通过以下两种方式接入：
+
+### 方式一：自建网易云音乐 API（推荐，免费歌曲完整播放）
+
+`tools/netease_api/run_netease_api.bat` 一键启动（需 Node.js，首次运行自动安装依赖）：
+
+1. 双击 `run_netease_api.bat`，浏览器自动打开二维码登录页
+2. 用网易云音乐 App 扫码登录自己的账号
+3. 登录后：免费歌曲返回**完整**播放地址；VIP 歌曲需要 VIP 账号；未登录时只有试听片段
+4. 修改 [tools/templates/网易云_自建.json](tools/templates/网易云_自建.json) 中
+   `baseUrl` 为电脑局域网 IP（如 `http://192.168.1.100:3000`，查看方式：
+   设置 → 网络 → 属性 → IPv4 地址），然后「导入音乐源」粘贴该 JSON
+5. 手机与电脑处于同一 Wi-Fi 时即可搜索并完整播放
+
+### 方式二：Jamendo（合法 CC 音乐，一步到位）
+
+[Jamendo](https://developer.jamendo.com) 免费注册后创建应用获取 `client_id`，
+把 [tools/templates/jamendo_完整歌曲.json](tools/templates/jamendo_完整歌曲.json)
+中的 `YOUR_CLIENT_ID` 替换后导入。曲库为独立音乐人作品，全部为完整歌曲。
+
+免责声明：请仅导入你有权访问的 API，遵守各平台服务条款与当地法律法规。
 
 ## 本地音乐（MP3 导入）
 
@@ -114,10 +152,23 @@ App 启动 3 秒后自动检查远端 `update.json`，发现新版本时弹窗�
 
 ## 登录
 
-App 启动后需登录，全应用仅一个唯一账号，凭据定义在
-[lib/services/auth.dart](lib/services/auth.dart) 的 `Auth.username` / `Auth.password`
-常量中（修改后重新构建 APK 生效）。登录状态保存在本机，下次启动自动登录；
-可在「我的」→「退出登录」注销。
+App 启动后需登录，全应用仅一个唯一账号。支持两种校验模式：
+
+- **服务端校验（推荐）**：在 [lib/app_info.dart](lib/app_info.dart) 的
+  `authUrl` 填入登录校验接口地址（POST JSON `{username, password}`，200 表示通过，
+  401 拒绝，429 限流）。凭据只存在服务端，APK 内不含任何密码。
+  配套接口实现见 `auth_site/functions/index.ts`（Edge Function，凭据存
+  `APP_LOGIN_USER` / `APP_LOGIN_PASS` 两个 Secret，含每 IP 限流）。
+- **本地兜底**：`authUrl` 留空时使用构建期注入的 `LOCAL_USER` / `LOCAL_PASS`
+  做本地校验（凭据在 APK 内，可被反编译，仅作临时方案）。凭据不进入源码与仓库，
+  构建时传入：
+  ```bash
+  flutter build apk --release \
+    --dart-define=LOCAL_USER=你的账号 --dart-define=LOCAL_PASS=你的密码
+  ```
+  未注入 `LOCAL_PASS` 时本地模式拒绝一切登录。
+
+登录状态保存在本机，下次启动自动登录；可在「我的」→「退出登录」注销。
 
 ## 应用图标
 

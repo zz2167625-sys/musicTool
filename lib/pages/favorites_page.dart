@@ -43,7 +43,14 @@ class FavoritesPage extends StatelessWidget {
             itemCount: favorites.length,
             itemBuilder: (context, i) => SongTile(
               song: favorites[i],
-              onTap: () => PlayUtils.playSongs(favorites, i),
+              onTap: () async {
+                if (!await PlayUtils.playSongs(favorites, i) &&
+                    context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('无法获取播放地址')),
+                  );
+                }
+              },
               trailing: IconButton(
                 icon: const Icon(Icons.favorite),
                 color: Theme.of(context).colorScheme.primary,

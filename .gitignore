@@ -55,3 +55,8 @@ __pycache__/
 # 抓取工具生成的搜索结果与下载文件
 tools/scraped_songs.json
 tools/scraped_files/
+
+# 自建网易云 API 的依赖
+tools/netease_api/node_modules/
+tools/netease_api/package.json
+tools/netease_api/package-lock.json

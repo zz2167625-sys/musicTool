@@ -6,11 +6,15 @@ class AppInfo {
   AppInfo._();
 
   static const name = 'zephyr';
-  static const version = '1.4.0';
+  static const version = '1.5.0';
 
   /// 远端更新信息地址（仓库公开，App 匿名访问 raw 链接）：
   /// {"version": "1.4.1", "url": "https://...", "notes": "更新说明"}
   /// 发布新版时更新仓库根目录 update.json 即可，App 会据此判断并提示。
   static const updateUrl =
       'https://raw.githubusercontent.com/zz2167625-sys/musicTool/main/update.json';
+
+  /// 登录校验服务端地址（POST JSON {username, password}，200 表示通过）。
+  /// 留空时使用 Auth 内置本地校验；填入后凭据只在服务端，APK 内不再包含密码。
+  static const authUrl = '';
 }

@@ -413,8 +413,14 @@ def normalize_source(obj):
         return None
     if not str(mapping.get("title") or "").strip():
         return None
-    if not str(mapping.get("url") or "").strip():
-        return None
+    url_field = str(mapping.get("url") or "").strip()
+    url_template = str(mapping.get("urlTemplate") or "").strip()
+    url_resolve = mapping.get("urlResolve")
+    if not url_field and not url_template:
+        if not (isinstance(url_resolve, dict)
+                and str(url_resolve.get("path") or "").strip()
+                and str(url_resolve.get("urlPath") or "").strip()):
+            return None
 
     def as_map(v):
         return v if isinstance(v, dict) else {}
@@ -432,8 +438,22 @@ def normalize_source(obj):
     m.setdefault("duration", "duration")
     m.setdefault("durationUnit", "s")
 
+    def norm_resolve(v):
+        if not isinstance(v, dict):
+            return None
+        r = {str(k): val for k, val in v.items()}
+        r.setdefault("method", "GET")
+        r.setdefault("body", {})
+        return {
+            "path": str(r.get("path") or "").strip(),
+            "method": str(r.get("method") or "GET").upper(),
+            "urlPath": str(r.get("urlPath") or "").strip(),
+            "body": as_map(r.get("body")),
+        }
+
     s = {str(k): v for k, v in search.items()}
     s.setdefault("keywordParam", "keywords")
+    resolved = norm_resolve(url_resolve)
 
     return {
         "name": name,
@@ -455,6 +475,8 @@ def normalize_source(obj):
             "album": str(m.get("album") or "album"),
             "cover": str(m.get("cover") or "picUrl"),
             "url": str(m.get("url") or ""),
+            "urlTemplate": url_template,
+            **({"urlResolve": resolved} if resolved else {}),
             "duration": str(m.get("duration") or "duration"),
             "durationUnit": str(m.get("durationUnit") or "s").lower(),
         },
@@ -576,6 +598,17 @@ def resolve_url(base_url, raw):
     return urllib.parse.urljoin(base_url + "/", raw)
 
 
+def resolve_template_url(template, item):
+    """将 {field} 占位符按条目字段解析为完整 URL。"""
+    if not template:
+        return ""
+    out = template
+    for field in re.findall(r"\{([^{}]+)\}", template):
+        value = as_text(get_path(item, field))
+        out = out.replace("{" + field + "}", urllib.parse.quote(value))
+    return out
+
+
 def extract_songs(source, data):
     """从搜索响应中提取歌曲列表，与 App 内 json_utils.extractSongs 逻辑一致。"""
     m = source["mapping"]
@@ -588,8 +621,17 @@ def extract_songs(source, data):
             continue
         song_id = as_text(get_path(item, m.get("id", "")))
         title = as_text(get_path(item, m.get("title", "")))
+        if not song_id or not title:
+            continue
         raw_url = as_text(get_path(item, m.get("url", "")))
-        if not song_id or not title or not raw_url:
+        if raw_url:
+            url = resolve_url(source["baseUrl"], raw_url)
+        elif m.get("urlTemplate"):
+            url = resolve_template_url(m["urlTemplate"], item)
+            url = resolve_url(source["baseUrl"], url) if url else ""
+        elif m.get("urlResolve"):
+            url = ""  # 播放地址需二次请求，App 播放时解析
+        else:
             continue
         duration = None
         d = get_path(item, m.get("duration", ""))
@@ -603,7 +645,7 @@ def extract_songs(source, data):
                 "artist": artist_text(get_path(item, m.get("artist", ""))),
                 "album": album_text(get_path(item, m.get("album", ""))),
                 "cover": resolve_url(source["baseUrl"], raw_cover) if raw_cover else "",
-                "url": resolve_url(source["baseUrl"], raw_url),
+                "url": url,
                 "duration": duration,
                 "source": source["name"],
             }

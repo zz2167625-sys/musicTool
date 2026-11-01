@@ -18,6 +18,13 @@
     "album": "album.name",
     "cover": "picUrl",
     "url": "url",
+    "urlTemplate": "",
+    "urlResolve": {
+      "path": "/song/url?id={id}",
+      "method": "GET",
+      "urlPath": "data.url",
+      "body": {}
+    },
     "duration": "duration",
     "durationUnit": "ms"
   }

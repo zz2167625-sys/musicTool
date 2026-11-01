@@ -26,17 +26,28 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     if (_submitting) return;
-    if (!Auth.verify(_userController.text, _passController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('账号或密码错误')),
+    setState(() => _submitting = true);
+    final result = await Auth.login(
+      _userController.text.trim(),
+      _passController.text,
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    if (result == AuthResult.success) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeShell()),
       );
       return;
     }
-    setState(() => _submitting = true);
-    await Auth.setLoggedIn(true);
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeShell()),
+    final message = switch (result) {
+      AuthResult.invalidCredentials => '账号或密码错误',
+      AuthResult.tooManyAttempts => '尝试次数过多，请稍后再试',
+      AuthResult.networkError => '网络连接失败，请检查网络后重试',
+      AuthResult.serverError => '服务器异常，请稍后再试',
+      AuthResult.success => '',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
