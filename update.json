@@ -1,5 +1,5 @@
 {
   "version": "1.5.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 支持完整歌曲播放：音乐源新增 urlTemplate / urlResolve 能力，自建网易云 API 后免费歌曲可完整播放（扫码登录自己账号），另附 Jamendo 合法完整歌曲模板\n2. 登录支持服务端校验模式（待部署后端后启用），本地模式继续可用"
+  "notes": "1. 支持完整歌曲播放：音乐源新增 urlTemplate / urlResolve 能力，自建网易云 API 后免费歌曲可完整播放（扫码登录自己账号），另附 Jamendo 合法完整歌曲模板\n2. 登录改为服务端校验：密码只存在云端 Worker 机密中，APK 内不再包含任何密码"
 }

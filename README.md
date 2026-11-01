@@ -154,11 +154,12 @@ App 启动 3 秒后自动检查远端 `update.json`，发现新版本时弹窗�
 
 App 启动后需登录，全应用仅一个唯一账号。支持两种校验模式：
 
-- **服务端校验（推荐）**：在 [lib/app_info.dart](lib/app_info.dart) 的
-  `authUrl` 填入登录校验接口地址（POST JSON `{username, password}`，200 表示通过，
-  401 拒绝，429 限流）。凭据只存在服务端，APK 内不含任何密码。
-  配套接口实现见 `auth_site/functions/index.ts`（Edge Function，凭据存
-  `APP_LOGIN_USER` / `APP_LOGIN_PASS` 两个 Secret，含每 IP 限流）。
+- **服务端校验（默认已启用）**：[lib/app_info.dart](lib/app_info.dart) 的
+  `authUrl` 已指向部署好的 Cloudflare Worker（POST JSON `{username, password}`，
+  200 表示通过，401 拒绝，429 限流）。凭据只存在 Worker 机密（`LOGIN_USER` /
+  `LOGIN_PASS`）中，APK 与仓库内不含任何密码。
+  接口实现见 `auth_site/cloudflare_worker.js`（含每 IP 限流）与
+  `auth_site/functions/index.ts`（Deno Edge Function 版）。
 - **本地兜底**：`authUrl` 留空时使用构建期注入的 `LOCAL_USER` / `LOCAL_PASS`
   做本地校验（凭据在 APK 内，可被反编译，仅作临时方案）。凭据不进入源码与仓库，
   构建时传入：

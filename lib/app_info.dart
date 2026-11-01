@@ -15,6 +15,6 @@ class AppInfo {
       'https://raw.githubusercontent.com/zz2167625-sys/musicTool/main/update.json';
 
   /// 登录校验服务端地址（POST JSON {username, password}，200 表示通过）。
-  /// 留空时使用 Auth 内置本地校验；填入后凭据只在服务端，APK 内不再包含密码。
-  static const authUrl = '';
+  /// 凭据只存在服务端 Worker 机密中，APK 与仓库内均不含任何密码。
+  static const authUrl = 'https://zephyr.zz2167625.workers.dev/auth';
 }
