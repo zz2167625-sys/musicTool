@@ -86,20 +86,21 @@ flutter build apk --release
 
 ## 完整歌曲播放
 
-内置的 iTunes / Deezer 源来自官方**试听接口**，只能播放 30 秒片段。
-完整歌曲可通过以下两种方式接入：
+App 内置「酷我 完整歌曲」与「酷狗 完整歌曲」两个免登录音源，开箱即可完整播放
+大量曲目（各平台 VIP 独占曲目仍受限制）。另有以下扩展方式：
 
-### 方式一：自建网易云音乐 API（推荐，免费歌曲完整播放）
+### 方式一：网易云自建 API（可解锁自己账号的曲库）
 
 `tools/netease_api/run_netease_api.bat` 一键启动（需 Node.js，首次运行自动安装依赖）：
 
-1. 双击 `run_netease_api.bat`，浏览器自动打开二维码登录页
-2. 用网易云音乐 App 扫码登录自己的账号
-3. 登录后：免费歌曲返回**完整**播放地址；VIP 歌曲需要 VIP 账号；未登录时只有试听片段
-4. 修改 [tools/templates/网易云_自建.json](tools/templates/网易云_自建.json) 中
-   `baseUrl` 为电脑局域网 IP（如 `http://192.168.1.100:3000`，查看方式：
-   设置 → 网络 → 属性 → IPv4 地址），然后「导入音乐源」粘贴该 JSON
-5. 手机与电脑处于同一 Wi-Fi 时即可搜索并完整播放
+1. 电脑浏览器登录 https://music.163.com （若已登录跳过）
+2. F12 → 应用/Application → Cookie → music.163.com → 复制 `MUSIC_U` 的值
+3. 把 `tools/templates/网易云_自建.json` 中的 `baseUrl` 改为电脑局域网 IP
+   （如 `http://10.32.16.165:3000`），并在 `headers` 中加入
+   `"Cookie": "MUSIC_U=你复制的值; os=pc; appver=2.9.7"`
+4. 保存后在 App「导入音乐源」粘贴该 JSON；手机与电脑同一 Wi-Fi 即可
+
+免费歌曲可完整播放，VIP 歌曲需要 VIP 账号；Cookie 仅保存在你自己的音乐源配置里。
 
 ### 方式二：Jamendo（合法 CC 音乐，一步到位）
 

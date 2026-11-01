@@ -108,7 +108,14 @@ class MusicApi {
         resp = await http.get(uri, headers: headers).timeout(_timeout);
       }
       if (resp.statusCode != 200) return null;
-      final data = jsonDecode(utf8.decode(resp.bodyBytes));
+      final bodyText = utf8.decode(resp.bodyBytes);
+      dynamic data;
+      try {
+        data = jsonDecode(bodyText);
+      } catch (_) {
+        // 取链接口可能直接返回纯文本 URL（如酷我 anti.s）
+        data = bodyText;
+      }
       final raw = asText(getPath(data, config.urlPath));
       final url = raw.isEmpty ? '' : source.resolveUrl(raw);
       _urlCache[cacheKey] = (

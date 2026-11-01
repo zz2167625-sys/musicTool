@@ -119,6 +119,74 @@ BUILTIN_TEMPLATES = [
             "durationUnit": "s",
         },
     },
+    {
+        "name": "酷狗 完整歌曲",
+        "version": "1.0.0",
+        "baseUrl": "http://mobilecdn.kugou.com/api/v3",
+        "headers": {},
+        "search": {
+            "path": "/search/song",
+            "method": "GET",
+            "keywordParam": "keyword",
+            "params": {"format": "json", "page": 1, "pagesize": 30},
+            "body": {},
+        },
+        "mapping": {
+            "list": "data.info",
+            "id": "hash",
+            "title": "songname",
+            "artist": "singername",
+            "album": "album_name",
+            "cover": "",
+            "url": "",
+            "urlResolve": {
+                "path": "http://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
+                "method": "GET",
+                "urlPath": "url",
+                "body": {},
+            },
+            "duration": "duration",
+            "durationUnit": "s",
+        },
+    },
+    {
+        "name": "酷我 完整歌曲",
+        "version": "1.0.0",
+        "baseUrl": "http://search.kuwo.cn",
+        "headers": {},
+        "search": {
+            "path": "/r.s",
+            "method": "GET",
+            "keywordParam": "all",
+            "params": {
+                "client": "kt",
+                "pn": 0,
+                "rn": 30,
+                "ft": "music",
+                "rformat": "json",
+                "encoding": "utf8",
+                "mobi": 1,
+            },
+            "body": {},
+        },
+        "mapping": {
+            "list": "abslist",
+            "id": "MUSICRID",
+            "title": "SONGNAME",
+            "artist": "ARTIST",
+            "album": "ALBUM",
+            "cover": "web_albumpic_short",
+            "url": "",
+            "urlResolve": {
+                "path": "http://antiserver.kuwo.cn/anti.s?type=convert_url&rid={id}&format=mp3&response=url",
+                "method": "GET",
+                "urlPath": "",
+                "body": {},
+            },
+            "duration": "DURATION",
+            "durationUnit": "s",
+        },
+    },
 ]
 
 # 仓库搜索关键词：前几个与 musicTool 音乐源格式强相关
@@ -418,8 +486,7 @@ def normalize_source(obj):
     url_resolve = mapping.get("urlResolve")
     if not url_field and not url_template:
         if not (isinstance(url_resolve, dict)
-                and str(url_resolve.get("path") or "").strip()
-                and str(url_resolve.get("urlPath") or "").strip()):
+                and str(url_resolve.get("path") or "").strip()):
             return None
 
     def as_map(v):
@@ -635,8 +702,16 @@ def extract_songs(source, data):
             continue
         duration = None
         d = get_path(item, m.get("duration", ""))
+        value = None
         if isinstance(d, (int, float)):
-            duration = round(d / 1000) if m.get("durationUnit") == "ms" else round(d)
+            value = d
+        elif isinstance(d, str):
+            try:
+                value = float(d)
+            except ValueError:
+                value = None
+        if value is not None:
+            duration = round(value / 1000) if m.get("durationUnit") == "ms" else round(value)
         raw_cover = as_text(get_path(item, m.get("cover", "")))
         songs.append(
             {

@@ -1,0 +1,38 @@
+{
+  "name": "酷我 完整歌曲",
+  "version": "1.0.0",
+  "baseUrl": "http://search.kuwo.cn",
+  "headers": {},
+  "search": {
+    "path": "/r.s",
+    "method": "GET",
+    "keywordParam": "all",
+    "params": {
+      "client": "kt",
+      "pn": 0,
+      "rn": 30,
+      "ft": "music",
+      "rformat": "json",
+      "encoding": "utf8",
+      "mobi": 1
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "abslist",
+    "id": "MUSICRID",
+    "title": "SONGNAME",
+    "artist": "ARTIST",
+    "album": "ALBUM",
+    "cover": "web_albumpic_short",
+    "url": "",
+    "urlResolve": {
+      "path": "http://antiserver.kuwo.cn/anti.s?type=convert_url&rid={id}&format=mp3&response=url",
+      "method": "GET",
+      "urlPath": "",
+      "body": {}
+    },
+    "duration": "DURATION",
+    "durationUnit": "s"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 支持完整歌曲播放：音乐源新增 urlTemplate / urlResolve 能力，自建网易云 API 后免费歌曲可完整播放（扫码登录自己账号），另附 Jamendo 合法完整歌曲模板\n2. 登录改为服务端校验：密码只存在云端 Worker 机密中，APK 内不再包含任何密码"
+  "notes": "1. 新增内置「酷我 完整歌曲」「酷狗 完整歌曲」音乐源：免登录即可完整播放大量曲目（含热门歌，VIP 独占曲目除外）\n2. 取链接口支持纯文本响应，时长兼容字符串格式"
 }

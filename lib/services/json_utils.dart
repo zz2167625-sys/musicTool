@@ -100,8 +100,15 @@ Song? extractSong(
 
   int? duration;
   final d = getPath(item, mapping.duration);
+  num? value;
   if (d is num) {
-    duration = mapping.durationUnit == 'ms' ? (d / 1000).round() : d.round();
+    value = d;
+  } else if (d is String) {
+    value = num.tryParse(d);
+  }
+  if (value != null) {
+    duration =
+        mapping.durationUnit == 'ms' ? (value / 1000).round() : value.round();
   }
 
   final rawCover = asText(getPath(item, mapping.cover));

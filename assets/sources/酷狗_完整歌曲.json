@@ -1,0 +1,34 @@
+{
+  "name": "酷狗 完整歌曲",
+  "version": "1.0.0",
+  "baseUrl": "http://mobilecdn.kugou.com/api/v3",
+  "headers": {},
+  "search": {
+    "path": "/search/song",
+    "method": "GET",
+    "keywordParam": "keyword",
+    "params": {
+      "format": "json",
+      "page": 1,
+      "pagesize": 30
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "data.info",
+    "id": "hash",
+    "title": "songname",
+    "artist": "singername",
+    "album": "album_name",
+    "cover": "",
+    "url": "",
+    "urlResolve": {
+      "path": "http://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
+      "method": "GET",
+      "urlPath": "url",
+      "body": {}
+    },
+    "duration": "duration",
+    "durationUnit": "s"
+  }
+}

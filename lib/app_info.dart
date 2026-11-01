@@ -6,7 +6,7 @@ class AppInfo {
   AppInfo._();
 
   static const name = 'zephyr';
-  static const version = '1.5.0';
+  static const version = '1.6.0';
 
   /// 远端更新信息地址（仓库公开，App 匿名访问 raw 链接）：
   /// {"version": "1.4.1", "url": "https://...", "notes": "更新说明"}
