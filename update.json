@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
+  "version": "2.0.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 新增内置音源「Audius 音乐」：海外开放音乐平台，完整歌曲、免密钥（需代理访问）\n2. 内置音源共 5 个：酷我/酷狗（国内直连完整歌曲）、Audius（海外完整歌曲）、iTunes/Deezer（试听）"
+  "notes": "1. 移除网易云相关组件：升级后自动清理已导入的「网易云（自建）」音源，仓库同步删除相关文件\n2. 仓库优化：抓取工具生成目录不再入库\n3. 内置 5 音源：酷我/酷狗（国内直连完整歌曲）、Audius（海外完整歌曲）、iTunes/Deezer（试听）"
 }

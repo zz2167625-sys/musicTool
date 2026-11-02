@@ -58,6 +58,9 @@ class SourceManager extends ChangeNotifier {
   List<MusicSource> get enabledSources =>
       _sources.where((s) => s.enabled).toList();
 
+  /// 已废弃的音源名称（服务器不再维护，升级时自动移除）。
+  static const _removedSourceNames = ['网易云音乐（自建）', '网易云 直链'];
+
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
@@ -69,6 +72,17 @@ class SourceManager extends ChangeNotifier {
         ..addAll(list.map(MusicSource.fromJson));
     } catch (_) {
       _sources.clear();
+    }
+    var changed = false;
+    _sources.removeWhere((s) {
+      if (_removedSourceNames.contains(s.name)) {
+        changed = true;
+        return true;
+      }
+      return false;
+    });
+    if (changed) {
+      await _save();
     }
     notifyListeners();
   }

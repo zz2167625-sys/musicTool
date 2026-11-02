@@ -56,13 +56,3 @@ __pycache__/
 tools/scraped_songs.json
 tools/scraped_files/
 tools/sources/
-
-# 自建网易云 API 的依赖
-tools/netease_api/node_modules/
-tools/netease_api/package.json
-tools/netease_api/package-lock.json
-
-# 自建网易云 API 的运行产物（含登录 Cookie 与二维码，勿提交）
-tools/netease_api/serve/
-tools/netease_api/.login_cookie.txt
-tools/netease_api/登录二维码.png
