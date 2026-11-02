@@ -8,6 +8,7 @@ final PlayerHandler playerHandler = PlayerHandler();
 
 class PlayerHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final _player = AudioPlayer();
+  int? _lastIndex;
 
   PlayerHandler() {
     _loadEmptyPlaylist();
@@ -15,6 +16,20 @@ class PlayerHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
     _listenForSequenceStateChanges();
+    _listenForAutoAdvance();
+  }
+
+  /// 播放完一首后自动切换列表下一首（just_audio 通常自动处理，这里兜底）。
+  void _listenForAutoAdvance() {
+    _player.processingStateStream.listen((state) {
+      if (state != ProcessingState.completed) return;
+      final index = _player.currentIndex;
+      final length = _player.sequence.length;
+      if (_lastIndex == null || length <= 1) return;
+      if (index == _lastIndex && _lastIndex! < length - 1) {
+        _player.seekToNext();
+      }
+    });
   }
 
   Future<void> _loadEmptyPlaylist() async {
@@ -71,6 +86,7 @@ class PlayerHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   void _listenForCurrentSongIndexChanges() {
     _player.currentIndexStream.listen((index) {
+      _lastIndex = index;
       final playlist = queue.value;
       if (index == null || playlist.isEmpty) return;
       if (_player.shuffleModeEnabled) {

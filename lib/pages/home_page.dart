@@ -1,9 +1,74 @@
 import 'package:flutter/material.dart';
 
+import '../models/song.dart';
 import '../services/local_store.dart';
 import '../services/play_utils.dart';
 import '../services/source_manager.dart';
-import '../widgets/song_tile.dart';
+
+class _RecentCard extends StatelessWidget {
+  const _RecentCard({required this.song, required this.onTap});
+
+  final Song song;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox.expand(
+                child: song.cover.isEmpty
+                    ? ColoredBox(
+                        color: scheme.surfaceContainerHigh,
+                        child: Icon(
+                          Icons.music_note,
+                          size: 40,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      )
+                    : Image.network(
+                        song.cover,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.music_note,
+                          size: 40,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            song.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          Text(
+            song.artist,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -89,19 +154,26 @@ class HomePage extends StatelessWidget {
                   ),
                 )
               else
-                ...recents.map(
-                  (song) => SongTile(
-                    song: song,
-                    onTap: () async {
-                      final i = recents.indexOf(song);
-                      if (!await PlayUtils.playSongs(recents, i) &&
-                          context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('无法获取播放地址')),
-                        );
-                      }
-                    },
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.35,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
+                  itemCount: recents.length,
+                  itemBuilder: (context, i) =>
+                      _RecentCard(song: recents[i], onTap: () async {
+                    if (!await PlayUtils.playSongs(recents, i) &&
+                        context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('无法获取播放地址')),
+                      );
+                    }
+                  }),
                 ),
             ],
           );

@@ -1,8 +1,10 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../models/song.dart';
 import '../services/local_store.dart';
+import '../services/mv_service.dart';
 import '../services/player_handler.dart';
 
 class PlayerPage extends StatelessWidget {
@@ -91,6 +93,8 @@ class PlayerPage extends StatelessWidget {
                           const _Controls(),
                           const SizedBox(height: 8),
                           _FavoriteButton(item: item),
+                          const SizedBox(height: 16),
+                          _MvSection(item: item),
                         ],
                       ),
                     ),
@@ -102,6 +106,195 @@ class PlayerPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _MvSection extends StatefulWidget {
+  const _MvSection({required this.item});
+
+  final MediaItem item;
+
+  @override
+  State<_MvSection> createState() => _MvSectionState();
+}
+
+class _MvSectionState extends State<_MvSection> {
+  VideoPlayerController? _controller;
+  bool _loading = false;
+  bool _noMv = false;
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MvSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.id != widget.item.id) {
+      _disposeController();
+      _resolve();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeController();
+    super.dispose();
+  }
+
+  void _disposeController() {
+    _controller?.dispose();
+    _controller = null;
+    _playing = false;
+  }
+
+  Future<void> _resolve() async {
+    final keyword =
+        '${widget.item.artist ?? ''} ${widget.item.title}'.trim();
+    setState(() {
+      _loading = true;
+      _noMv = false;
+    });
+    final url = await MvService.resolveMv(keyword);
+    if (!mounted) return;
+    if (url == null) {
+      setState(() {
+        _loading = false;
+        _noMv = true;
+      });
+      return;
+    }
+    final controller =
+        VideoPlayerController.networkUrl(Uri.parse(url));
+    try {
+      await controller.initialize();
+    } catch (_) {
+      controller.dispose();
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _noMv = true;
+      });
+      return;
+    }
+    if (!mounted) {
+      controller.dispose();
+      return;
+    }
+    controller.addListener(() {
+      if (controller.value.position >= controller.value.duration &&
+          controller.value.duration > Duration.zero) {
+        _stopMv();
+      }
+    });
+    setState(() {
+      _controller = controller;
+      _loading = false;
+    });
+  }
+
+  void _playMv() {
+    final controller = _controller;
+    if (controller == null) return;
+    playerHandler.pause();
+    controller.setVolume(1);
+    controller.play();
+    setState(() => _playing = true);
+  }
+
+  void _stopMv() {
+    final controller = _controller;
+    if (controller == null) return;
+    controller.pause();
+    playerHandler.play();
+    setState(() => _playing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget child;
+    if (_loading) {
+      child = const SizedBox(
+        height: 40,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    } else if (_noMv) {
+      child = SizedBox(
+        height: 40,
+        child: Center(
+          child: Text(
+            '暂无 MV',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      );
+    } else if (_controller != null) {
+      child = Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  VideoPlayer(_controller!),
+                  if (!_playing)
+                    InkWell(
+                      onTap: _playMv,
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        child: Icon(
+                          Icons.play_circle_fill_rounded,
+                          size: 56,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+                  if (_playing)
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          color: Colors.white,
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                Colors.black.withValues(alpha: 0.4),
+                          ),
+                          onPressed: _stopMv,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _playing ? 'MV 播放中（音乐已暂停）' : '点击播放 MV（音乐会暂停）',
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      );
+    } else {
+      child = const SizedBox.shrink();
+    }
+    return AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: child);
   }
 }
 

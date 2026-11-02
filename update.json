@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 移除试听音源：iTunes/Deezer 试听源已删除，升级后自动清理\n2. 音乐源列表整合为可展开/收起的折叠面板\n3. 内置 3 个完整歌曲音源：酷我/酷狗（国内直连）、Audius（海外）"
+  "notes": "1. UI 升级为 Spotify 风格：主题绿色、悬浮胶囊迷你播放器、首页最近播放卡片网格\n2. 播放界面新增 MV：自动检索当前歌曲 MV 并可播放（B站资源，播放时音乐自动暂停）\n3. 播放完自动切换列表下一首（兜底保障）"
 }
