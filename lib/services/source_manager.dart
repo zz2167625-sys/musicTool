@@ -13,13 +13,14 @@ class SourceManager extends ChangeNotifier {
   static final SourceManager instance = SourceManager._();
 
   static const _key = 'music_sources';
-  static const _seededKey = 'builtin_sources_seeded_v2';
+  static const _seededKey = 'builtin_sources_seeded_v3';
 
   /// 内置音乐源（由 tools/music_source_scraper.py 抓取，随 App 打包）。
   /// 首次启动自动导入；用户删除后不会被再次添加。
   static const _builtInAssets = [
     'assets/sources/酷我_完整歌曲.json',
     'assets/sources/酷狗_完整歌曲.json',
+    'assets/sources/Audius_音乐.json',
     'assets/sources/iTunes_试听.json',
     'assets/sources/Deezer_试听.json',
   ];

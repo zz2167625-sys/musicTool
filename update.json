@@ -1,5 +1,5 @@
 {
-  "version": "1.8.0",
+  "version": "1.9.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 更新通道新增国内可直连地址（fastly/gcore），不开代理也能收到更新\n2. 酷我音源全链路 HTTPS，无代理可用性提升\n3. 音源健康监测：连续失败自动停用，设置页显示音源状态\n4. 多源搜索结果自动去重整合"
+  "notes": "1. 新增内置音源「Audius 音乐」：海外开放音乐平台，完整歌曲、免密钥（需代理访问）\n2. 内置音源共 5 个：酷我/酷狗（国内直连完整歌曲）、Audius（海外完整歌曲）、iTunes/Deezer（试听）"
 }
