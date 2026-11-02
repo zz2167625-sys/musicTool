@@ -140,7 +140,7 @@ BUILTIN_TEMPLATES = [
             "cover": "",
             "url": "",
             "urlResolve": {
-                "path": "http://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
+                "path": "https://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
                 "method": "GET",
                 "urlPath": "url",
                 "body": {},
@@ -152,7 +152,7 @@ BUILTIN_TEMPLATES = [
     {
         "name": "酷我 完整歌曲",
         "version": "1.0.0",
-        "baseUrl": "http://search.kuwo.cn",
+        "baseUrl": "https://search.kuwo.cn",
         "headers": {},
         "search": {
             "path": "/r.s",
@@ -178,7 +178,7 @@ BUILTIN_TEMPLATES = [
             "cover": "web_albumpic_short",
             "url": "",
             "urlResolve": {
-                "path": "http://antiserver.kuwo.cn/anti.s?type=convert_url&rid={id}&format=mp3&response=url",
+                "path": "https://antiserver.kuwo.cn/anti.s?type=convert_url&rid={id}&format=mp3&response=url",
                 "method": "GET",
                 "urlPath": "",
                 "body": {},

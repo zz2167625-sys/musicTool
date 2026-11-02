@@ -238,11 +238,19 @@ class _SourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final failing =
+        source.enabled && SourceManager.instance.failStreakOf(source.name) > 0;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(
-        Icons.cloud_outlined,
-        color: source.enabled ? scheme.primary : scheme.onSurfaceVariant,
+        !source.enabled
+            ? Icons.cloud_off_outlined
+            : failing
+                ? Icons.cloud_sync_outlined
+                : Icons.cloud_outlined,
+        color: source.enabled
+            ? (failing ? scheme.error : scheme.primary)
+            : scheme.onSurfaceVariant,
       ),
       title: Text(
         source.name,
@@ -251,7 +259,11 @@ class _SourceCard extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        source.baseUrl,
+        !source.enabled
+            ? '已停用 · ${source.baseUrl}'
+            : failing
+                ? '${source.baseUrl} · 最近搜索异常'
+                : source.baseUrl,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

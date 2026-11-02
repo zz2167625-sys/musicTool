@@ -23,7 +23,7 @@
     "cover": "",
     "url": "",
     "urlResolve": {
-      "path": "http://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
+      "path": "https://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash={id}",
       "method": "GET",
       "urlPath": "url",
       "body": {}

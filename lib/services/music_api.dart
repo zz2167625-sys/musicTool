@@ -17,9 +17,16 @@ class MusicApi {
       String keyword, List<MusicSource> sources) async {
     final results =
         await Future.wait(sources.map((s) => _searchOne(keyword, s)));
+    final seen = <String>{};
     final songs = <Song>[];
     for (final r in results) {
-      if (r != null) songs.addAll(r);
+      if (r == null) continue;
+      for (final song in r) {
+        // 多源结果去重整合：同名同歌手只保留第一个来源的结果
+        if (seen.add('${song.title}|${song.artist}')) {
+          songs.add(song);
+        }
+      }
     }
     return songs;
   }
@@ -46,10 +53,21 @@ class MusicApi {
             .get(source.buildSearchUri(keyword: keyword), headers: headers)
             .timeout(_timeout);
       }
-      if (resp.statusCode != 200) return null;
+      if (resp.statusCode != 200) {
+        SourceManager.instance.recordSourceFailure(source.name);
+        return null;
+      }
       final data = jsonDecode(utf8.decode(resp.bodyBytes));
-      return extractSongs(data, source.mapping, source.name, source.resolveUrl);
+      final songs =
+          extractSongs(data, source.mapping, source.name, source.resolveUrl);
+      if (songs.isEmpty) {
+        SourceManager.instance.recordSourceFailure(source.name);
+      } else {
+        SourceManager.instance.recordSourceSuccess(source.name);
+      }
+      return songs;
     } catch (_) {
+      SourceManager.instance.recordSourceFailure(source.name);
       return null;
     }
   }

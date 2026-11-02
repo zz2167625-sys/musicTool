@@ -43,7 +43,7 @@ class _SearchPageState extends State<SearchPage> {
       if (songs.isEmpty) {
         _error = SourceManager.instance.enabledSources.isEmpty
             ? '还没有可用的音乐源，请先到「我的」页面导入'
-            : '没有搜到结果，请检查音乐源是否可用';
+            : '没有搜到结果，异常音源会自动停用（可在「我的」查看）';
       }
     });
   }

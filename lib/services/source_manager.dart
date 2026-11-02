@@ -25,8 +25,34 @@ class SourceManager extends ChangeNotifier {
   ];
 
   final List<MusicSource> _sources = [];
+  final Map<String, int> _failStreak = {};
+
+  /// 连续失败达到该次数后自动停用该音乐源。
+  static const autoDisableThreshold = 5;
 
   List<MusicSource> get sources => List.unmodifiable(_sources);
+
+  int failStreakOf(String name) => _failStreak[name] ?? 0;
+
+  void recordSourceSuccess(String name) {
+    if (_failStreak.remove(name) != null) {
+      notifyListeners();
+    }
+  }
+
+  void recordSourceFailure(String name) {
+    final streak = (_failStreak[name] ?? 0) + 1;
+    _failStreak[name] = streak;
+    if (streak >= autoDisableThreshold) {
+      final source = byName(name);
+      if (source != null && source.enabled) {
+        source.enabled = false;
+        _save();
+        return;
+      }
+    }
+    notifyListeners();
+  }
 
   List<MusicSource> get enabledSources =>
       _sources.where((s) => s.enabled).toList();

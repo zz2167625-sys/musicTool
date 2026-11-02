@@ -6,14 +6,15 @@ class AppInfo {
   AppInfo._();
 
   static const name = 'zephyr';
-  static const version = '1.7.0';
+  static const version = '1.8.0';
 
-  /// 远端更新信息地址（按顺序尝试，任一可达即可；前两个在国内网络通常可直连）：
-  /// {"version": "1.6.2", "url": "https://...", "notes": "更新说明"}
-  /// 发布新版时更新仓库根目录 update.json 即可，App 会据此判断并提示。
+  /// 远端更新信息地址（按顺序尝试，任一可达即可）：
+  /// {"version": "1.8.1", "url": "https://...", "notes": "更新说明"}
+  /// fastly/gcore 为 jsDelivr 备用域名，国内网络可直连；raw 仅代理环境可达。
   static const updateUrls = [
     'https://zephyr.zz2167625.workers.dev/update.json',
-    'https://cdn.jsdelivr.net/gh/zz2167625-sys/musicTool@main/update.json',
+    'https://fastly.jsdelivr.net/gh/zz2167625-sys/musicTool@main/update.json',
+    'https://gcore.jsdelivr.net/gh/zz2167625-sys/musicTool@main/update.json',
     'https://raw.githubusercontent.com/zz2167625-sys/musicTool/main/update.json',
   ];
 
