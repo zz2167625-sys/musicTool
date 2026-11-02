@@ -127,14 +127,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 8),
               if (sources.isEmpty)
-                Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  child: const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      '暂无音乐源。点击右下角「导入音乐源」，'
-                      '粘贴音乐源 JSON 文本或填写 JSON 文件链接。'
-                      '音乐源格式示例见项目 README 与 example_source.json。',
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    '暂无音乐源。点击右下角「导入音乐源」，'
+                    '粘贴音乐源 JSON 文本或填写 JSON 文件链接。',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 )
@@ -160,18 +159,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              Card(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                child: ListTile(
-                  leading: Icon(
-                    Icons.library_music_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: const Text('导入 MP3'),
-                  subtitle: const Text('从设备选择 MP3 文件，复制到应用内并离线播放'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _importMp3,
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.library_music_outlined,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
+                title: const Text('导入 MP3'),
+                subtitle: const Text('从设备选择 MP3 文件，复制到应用内并离线播放'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _importMp3,
               ),
               if (localSongs.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -241,53 +238,51 @@ class _SourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.surfaceContainerHigh,
-      child: ListTile(
-        leading: Icon(
-          Icons.cloud_outlined,
-          color: source.enabled ? scheme.primary : scheme.onSurfaceVariant,
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        Icons.cloud_outlined,
+        color: source.enabled ? scheme.primary : scheme.onSurfaceVariant,
+      ),
+      title: Text(
+        source.name,
+        style: TextStyle(
+          color: source.enabled ? null : scheme.onSurfaceVariant,
         ),
-        title: Text(
-          source.name,
-          style: TextStyle(
-            color: source.enabled ? null : scheme.onSurfaceVariant,
+      ),
+      subtitle: Text(
+        source.baseUrl,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Switch(
+            value: source.enabled,
+            onChanged: (v) =>
+                SourceManager.instance.toggleSource(source.name, v),
           ),
-        ),
-        subtitle: Text(
-          'v${source.version} · ${source.baseUrl}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Switch(
-              value: source.enabled,
-              onChanged: (v) =>
-                  SourceManager.instance.toggleSource(source.name, v),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'delete') {
-                  SourceManager.instance.removeSource(source.name);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline),
-                      SizedBox(width: 8),
-                      Text('删除'),
-                    ],
-                  ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'delete') {
+                SourceManager.instance.removeSource(source.name);
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline),
+                    SizedBox(width: 8),
+                    Text('删除'),
+                  ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -306,16 +301,13 @@ class _LocalSongTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      child: SongTile(
-        song: song,
-        onTap: onTap,
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          tooltip: '删除',
-          onPressed: onDelete,
-        ),
+    return SongTile(
+      song: song,
+      onTap: onTap,
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline),
+        tooltip: '删除',
+        onPressed: onDelete,
       ),
     );
   }

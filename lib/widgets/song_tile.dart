@@ -58,12 +58,8 @@ class SongTile extends StatelessWidget {
         style: TextStyle(color: scheme.onSurfaceVariant),
       ),
       trailing: trailing ??
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(10),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
             child: Text(
               song.sourceName,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(

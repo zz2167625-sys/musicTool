@@ -96,13 +96,26 @@ class _SearchPageState extends State<SearchPage> {
                   )
                 : _results.isEmpty
                     ? Center(
-                        child: Text(
-                          '输入关键词，聚合搜索所有已启用的音乐源',
-                          style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.search,
+                              size: 40,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '搜索歌曲、歌手',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : ListView.builder(

@@ -1,5 +1,5 @@
 {
-  "version": "1.6.1",
+  "version": "1.7.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 修复更新提示：更新检查改为多地址回退（Cloudflare/jsDelivr/raw），国内网络也能收到更新\n2. 内置酷我/酷狗完整歌曲源（免登录完整播放，v1.6.0 引入）"
+  "notes": "1. UI 简洁化：设置页去卡片化、首页与搜索页精简、歌曲条目更紧凑\n2. 内置音源排序优化：国内可直连的酷我/酷狗置顶，不开代理即可正常使用\n3. 移除对电脑端自建服务的依赖"
 }

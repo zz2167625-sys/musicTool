@@ -30,37 +30,18 @@ class HomePage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '聚合多源搜索，一处听遍全网',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
               const SizedBox(height: 16),
               if (!hasSources)
-                Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.cloud_download_outlined,
-                          color:
-                              Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            '还没有音乐源。到「我的」页面导入音乐源后，即可搜索全网歌曲。',
-                          ),
-                        ),
-                      ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    '还没有音乐源，到「我的」页面导入后即可搜索全网歌曲。',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
