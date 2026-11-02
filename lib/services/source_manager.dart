@@ -21,8 +21,6 @@ class SourceManager extends ChangeNotifier {
     'assets/sources/酷我_完整歌曲.json',
     'assets/sources/酷狗_完整歌曲.json',
     'assets/sources/Audius_音乐.json',
-    'assets/sources/iTunes_试听.json',
-    'assets/sources/Deezer_试听.json',
   ];
 
   final List<MusicSource> _sources = [];
@@ -58,8 +56,13 @@ class SourceManager extends ChangeNotifier {
   List<MusicSource> get enabledSources =>
       _sources.where((s) => s.enabled).toList();
 
-  /// 已废弃的音源名称（服务器不再维护，升级时自动移除）。
-  static const _removedSourceNames = ['网易云音乐（自建）', '网易云 直链'];
+  /// 已废弃的音源名称（不再提供，升级时自动移除）。
+  static const _removedSourceNames = [
+    '网易云音乐（自建）',
+    '网易云 直链',
+    'iTunes 试听',
+    'Deezer 试听',
+  ];
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();

@@ -19,8 +19,8 @@ sources/ 目录，供「音乐盒子」App 通过链接或粘贴 JSON 的方式�
   python music_source_scraper.py --no-templates         # 不生成内置公开 API 模板
   python music_source_scraper.py --token GITHUB_TOKEN   # 提供 GitHub Token 提高限流额度
 
-每次运行都会把「内置模板」（iTunes / Deezer 公开 API，免密钥、可试听）写入
-sources/ 目录，保证开箱即有可用音乐源；其余来源通过 GitHub / Gitee 仓库搜索
+每次运行都会把「内置模板」（酷我 / 酷狗 / Audius 公开 API，免密钥、完整歌曲）
+写入 sources/ 目录，保证开箱即有可用音乐源；其余来源通过 GitHub / Gitee 仓库搜索
 与 grep.app 代码搜索补充。
 
 仅依赖 Python 3.8+ 标准库，无需 pip install。
@@ -69,56 +69,8 @@ GREP_QUERIES = [
     '"音乐源" "baseUrl" "keywordParam" lang:JSON',
 ]
 
-# 内置模板：公开、免密钥的音乐 API，开箱即可搜索试听
+# 内置模板：公开、免密钥的音乐 API，开箱即可完整播放
 BUILTIN_TEMPLATES = [
-    {
-        "name": "iTunes 试听",
-        "version": "1.0.0",
-        "baseUrl": "https://itunes.apple.com",
-        "headers": {},
-        "search": {
-            "path": "/search",
-            "method": "GET",
-            "keywordParam": "term",
-            "params": {"media": "music", "limit": "30"},
-            "body": {},
-        },
-        "mapping": {
-            "list": "results",
-            "id": "trackId",
-            "title": "trackName",
-            "artist": "artistName",
-            "album": "collectionName",
-            "cover": "artworkUrl100",
-            "url": "previewUrl",
-            "duration": "trackTimeMillis",
-            "durationUnit": "ms",
-        },
-    },
-    {
-        "name": "Deezer 试听",
-        "version": "1.0.0",
-        "baseUrl": "https://api.deezer.com",
-        "headers": {},
-        "search": {
-            "path": "/search",
-            "method": "GET",
-            "keywordParam": "q",
-            "params": {"limit": "30"},
-            "body": {},
-        },
-        "mapping": {
-            "list": "data",
-            "id": "id",
-            "title": "title",
-            "artist": "artist.name",
-            "album": "album.title",
-            "cover": "album.cover_medium",
-            "url": "preview",
-            "duration": "duration",
-            "durationUnit": "s",
-        },
-    },
     {
         "name": "酷狗 完整歌曲",
         "version": "1.0.0",

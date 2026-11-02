@@ -107,39 +107,42 @@ class _SettingsPageState extends State<SettingsPage> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ExpansionTile(
+                initiallyExpanded: true,
+                shape: const Border(),
+                collapsedShape: const Border(),
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                title: Text(
+                  '音乐源',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                subtitle: Text(
+                  '${sources.length} 个 · 点击展开或收起',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
                 children: [
-                  Text(
-                    '音乐源',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    '${sources.length} 个',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  if (sources.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        '暂无音乐源。点击右下角「导入音乐源」，'
+                        '粘贴音乐源 JSON 文本或填写 JSON 文件链接。',
+                        style: TextStyle(
                           color:
                               Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                  ),
+                      ),
+                    )
+                  else
+                    ...sources.map((source) => _SourceCard(source: source)),
                 ],
               ),
-              const SizedBox(height: 8),
-              if (sources.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    '暂无音乐源。点击右下角「导入音乐源」，'
-                    '粘贴音乐源 JSON 文本或填写 JSON 文件链接。',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              else
-                ...sources.map((source) => _SourceCard(source: source)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -111,7 +111,7 @@ App 内置三个完整歌曲音源，开箱即用：
 
 项目根目录 `tools/music_source_scraper.py`（纯 Python 标准库，Python 3.8+）
 从 GitHub / Gitee 公开仓库与 grep.app 代码搜索中查找并校验音乐源 JSON，
-并且**每次运行都会生成内置模板**（iTunes、Deezer 公开 API，免密钥、可在线试听），
+并且**每次运行都会生成内置模板**（酷我、酷狗、Audius 公开 API，免密钥、完整歌曲），
 保证开箱即有可用音乐源：
 
 ```bash
@@ -123,7 +123,7 @@ python tools/music_source_scraper.py --print        # 打印 JSON，可直接粘
 python tools/music_source_scraper.py --serve 8000   # 启动本地 HTTP 服务
 python tools/music_source_scraper.py --no-templates # 不生成内置模板
 python tools/music_source_scraper.py --search 周杰伦      # 用所有源搜歌，结果存 scraped_songs.json
-python tools/music_source_scraper.py --search 周杰伦 --download  # 同时下载试听音频到 scraped_files/
+python tools/music_source_scraper.py --search 周杰伦 --download  # 同时下载音频到 scraped_files/
 python tools/music_source_scraper.py --app-assets   # 把当前音乐源同步到 App 内置资源 assets/sources/
 ```
 
