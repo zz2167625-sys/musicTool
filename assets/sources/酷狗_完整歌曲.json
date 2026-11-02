@@ -1,8 +1,9 @@
 {
   "name": "酷狗 完整歌曲",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "baseUrl": "http://mobilecdn.kugou.com/api/v3",
   "headers": {},
+  "notes": "部分热门曲目需酷狗会员，未授权曲目无法播放",
   "search": {
     "path": "/search/song",
     "method": "GET",

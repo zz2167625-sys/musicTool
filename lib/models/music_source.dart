@@ -28,20 +28,20 @@ class SearchConfig {
   });
 
   factory SearchConfig.fromJson(Map<String, dynamic> json) => SearchConfig(
-        path: json['path']?.toString() ?? '',
-        method: (json['method']?.toString() ?? 'GET').toUpperCase(),
-        keywordParam: json['keywordParam']?.toString() ?? 'keywords',
-        params: _asMap(json['params']),
-        body: _asMap(json['body']),
-      );
+    path: json['path']?.toString() ?? '',
+    method: (json['method']?.toString() ?? 'GET').toUpperCase(),
+    keywordParam: json['keywordParam']?.toString() ?? 'keywords',
+    params: _asMap(json['params']),
+    body: _asMap(json['body']),
+  );
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'method': method,
-        'keywordParam': keywordParam,
-        'params': params,
-        'body': body,
-      };
+    'path': path,
+    'method': method,
+    'keywordParam': keywordParam,
+    'params': params,
+    'body': body,
+  };
 }
 
 class UrlResolveConfig {
@@ -66,11 +66,11 @@ class UrlResolveConfig {
       );
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'method': method,
-        'urlPath': urlPath,
-        'body': body,
-      };
+    'path': path,
+    'method': method,
+    'urlPath': urlPath,
+    'body': body,
+  };
 }
 
 class Mapping {
@@ -86,6 +86,18 @@ class Mapping {
   final String duration;
   final String durationUnit;
 
+  /// 条目过滤条件：字段路径 → 期望值，不满足的条目直接丢弃。
+  /// 例如 `{"is_streamable": true}` 只保留可流式播放的 Audius 曲目。
+  final Map<String, dynamic> filter;
+
+  /// 解析出播放地址后是否先做一次可播放性校验（HEAD/Range）。
+  /// 部分平台（如网易云）对无版权曲目会返回网页而不是音频，开启后可避免
+  /// 把死链放进播放队列。
+  final bool checkPlayable;
+
+  /// 搜索时即校验可播放性，只返回真正能播的条目（会增加搜索耗时）。
+  final bool checkPlayableOnSearch;
+
   const Mapping({
     required this.list,
     required this.id,
@@ -98,38 +110,48 @@ class Mapping {
     required this.urlResolve,
     required this.duration,
     required this.durationUnit,
+    this.filter = const {},
+    this.checkPlayable = false,
+    this.checkPlayableOnSearch = false,
   });
 
   factory Mapping.fromJson(Map<String, dynamic> json) => Mapping(
-        list: json['list']?.toString() ?? '',
-        id: json['id']?.toString() ?? 'id',
-        title: json['title']?.toString() ?? 'name',
-        artist: json['artist']?.toString() ?? 'artists',
-        album: json['album']?.toString() ?? 'album',
-        cover: json['cover']?.toString() ?? 'picUrl',
-        url: json['url']?.toString() ?? 'url',
-        urlTemplate: json['urlTemplate']?.toString() ?? '',
-        urlResolve: json['urlResolve'] is Map
-            ? UrlResolveConfig.fromJson(
-                (json['urlResolve'] as Map).cast<String, dynamic>())
-            : null,
-        duration: json['duration']?.toString() ?? 'duration',
-        durationUnit: (json['durationUnit']?.toString() ?? 's').toLowerCase(),
-      );
+    list: json['list']?.toString() ?? '',
+    id: json['id']?.toString() ?? 'id',
+    title: json['title']?.toString() ?? 'name',
+    artist: json['artist']?.toString() ?? 'artists',
+    album: json['album']?.toString() ?? 'album',
+    cover: json['cover']?.toString() ?? 'picUrl',
+    url: json['url']?.toString() ?? 'url',
+    urlTemplate: json['urlTemplate']?.toString() ?? '',
+    urlResolve: json['urlResolve'] is Map
+        ? UrlResolveConfig.fromJson(
+            (json['urlResolve'] as Map).cast<String, dynamic>(),
+          )
+        : null,
+    duration: json['duration']?.toString() ?? 'duration',
+    durationUnit: (json['durationUnit']?.toString() ?? 's').toLowerCase(),
+    filter: _asMap(json['filter']),
+    checkPlayable: json['checkPlayable'] == true,
+    checkPlayableOnSearch: json['checkPlayableOnSearch'] == true,
+  );
 
   Map<String, dynamic> toJson() => {
-        'list': list,
-        'id': id,
-        'title': title,
-        'artist': artist,
-        'album': album,
-        'cover': cover,
-        'url': url,
-        'urlTemplate': urlTemplate,
-        if (urlResolve != null) 'urlResolve': urlResolve!.toJson(),
-        'duration': duration,
-        'durationUnit': durationUnit,
-      };
+    'list': list,
+    'id': id,
+    'title': title,
+    'artist': artist,
+    'album': album,
+    'cover': cover,
+    'url': url,
+    'urlTemplate': urlTemplate,
+    if (urlResolve != null) 'urlResolve': urlResolve!.toJson(),
+    'duration': duration,
+    'durationUnit': durationUnit,
+    if (filter.isNotEmpty) 'filter': filter,
+    if (checkPlayable) 'checkPlayable': true,
+    if (checkPlayableOnSearch) 'checkPlayableOnSearch': true,
+  };
 }
 
 class MusicSource {
@@ -139,6 +161,7 @@ class MusicSource {
   final Map<String, String> headers;
   final SearchConfig search;
   final Mapping mapping;
+  final String notes;
   bool enabled;
 
   MusicSource({
@@ -148,6 +171,7 @@ class MusicSource {
     required this.headers,
     required this.search,
     required this.mapping,
+    this.notes = '',
     this.enabled = true,
   });
 
@@ -172,29 +196,31 @@ class MusicSource {
       headers: _asStringMap(json['headers']),
       search: SearchConfig.fromJson(searchJson.cast<String, dynamic>()),
       mapping: Mapping.fromJson(mappingJson.cast<String, dynamic>()),
+      notes: json['notes']?.toString() ?? '',
       enabled: json['enabled'] != false,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'version': version,
-        'baseUrl': baseUrl,
-        'headers': headers,
-        'search': search.toJson(),
-        'mapping': mapping.toJson(),
-        'enabled': enabled,
-      };
+    'name': name,
+    'version': version,
+    'baseUrl': baseUrl,
+    'headers': headers,
+    'search': search.toJson(),
+    'mapping': mapping.toJson(),
+    if (notes.isNotEmpty) 'notes': notes,
+    'enabled': enabled,
+  };
 
-  String get _normalizedBase =>
-      baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+  String get _normalizedBase => baseUrl.endsWith('/')
+      ? baseUrl.substring(0, baseUrl.length - 1)
+      : baseUrl;
 
   Uri buildSearchUri({String? keyword}) {
     final path = search.path.isEmpty
         ? ''
         : (search.path.startsWith('/') ? search.path : '/${search.path}');
-    final query =
-        search.params.map((k, v) => MapEntry(k, v.toString()));
+    final query = search.params.map((k, v) => MapEntry(k, v.toString()));
     if (keyword != null) {
       query[search.keywordParam] = keyword;
     }

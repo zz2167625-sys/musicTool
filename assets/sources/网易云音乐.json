@@ -1,0 +1,36 @@
+{
+  "name": "网易云音乐",
+  "version": "1.0.0",
+  "baseUrl": "https://music.163.com",
+  "headers": {
+    "Referer": "https://music.163.com/",
+    "Cookie": "os=pc; appver=2.9.7"
+  },
+  "notes": "公开搜索接口；无版权/VIP 曲目会自动跳过",
+  "search": {
+    "path": "/api/cloudsearch/pc",
+    "method": "GET",
+    "keywordParam": "s",
+    "params": {
+      "type": 1,
+      "offset": 0,
+      "limit": 30,
+      "total": "true"
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "result.songs",
+    "id": "id",
+    "title": "name",
+    "artist": "ar",
+    "album": "al",
+    "cover": "al.picUrl",
+    "url": "",
+    "urlTemplate": "https://music.163.com/song/media/outer/url?id={id}.mp3",
+    "duration": "dt",
+    "durationUnit": "ms",
+    "checkPlayable": true,
+    "checkPlayableOnSearch": true
+  }
+}

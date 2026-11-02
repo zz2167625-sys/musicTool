@@ -13,15 +13,21 @@ class SourceManager extends ChangeNotifier {
   static final SourceManager instance = SourceManager._();
 
   static const _key = 'music_sources';
-  static const _seededKey = 'builtin_sources_seeded_v3';
+  static const _legacySeededKey = 'builtin_sources_seeded_v3';
+  static const _seededNamesKey = 'builtin_source_names';
 
-  /// 内置音乐源（由 tools/music_source_scraper.py 抓取，随 App 打包）。
-  /// 首次启动自动导入；用户删除后不会被再次添加。
-  static const _builtInAssets = [
+  /// 内置音乐源（随 App 打包，首次启动自动导入）。
+  /// 新增内置源会自动加入老用户列表；用户主动删除过的源不会被自动加回。
+  static const builtInAssets = [
     'assets/sources/酷我_完整歌曲.json',
     'assets/sources/酷狗_完整歌曲.json',
     'assets/sources/Audius_音乐.json',
+    'assets/sources/网易云音乐.json',
+    'assets/sources/ccMixter_开放音乐.json',
   ];
+
+  /// 2.2.0 及更早版本内置过的源，用于升级时区分「老内置源」与「新增源」。
+  static const _legacyBuiltInNames = ['酷我 完整歌曲', '酷狗 完整歌曲', 'Audius 音乐'];
 
   final List<MusicSource> _sources = [];
   final Map<String, int> _failStreak = {};
@@ -51,6 +57,13 @@ class SourceManager extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  /// 清除某音源的失败计数（重新启用或手动测试后调用）。
+  void resetFailures(String name) {
+    if (_failStreak.remove(name) != null) {
+      notifyListeners();
+    }
   }
 
   List<MusicSource> get enabledSources =>
@@ -90,42 +103,99 @@ class SourceManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 首次启动时导入随 App 打包的内置音乐源；之后不再自动注入。
+  /// 首次启动导入全部内置源；老用户升级时只补充新增的内置源。
+  /// 用户主动删除过的源记录在 [_seededNamesKey] 中，不会被自动加回。
   Future<void> seedBuiltInSources() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(_seededKey) == true) return;
-    var added = false;
-    for (final asset in _builtInAssets) {
-      try {
-        final data = await rootBundle.loadString(asset);
-        final source = parseSourceJson(data);
-        if (source != null && byName(source.name) == null) {
-          _sources.add(source);
-          added = true;
+    final stored = prefs.getStringList(_seededNamesKey);
+    final seeded =
+        stored ??
+        (prefs.getBool(_legacySeededKey) == true
+            ? List<String>.from(_legacyBuiltInNames)
+            : <String>[]);
+    var added = 0;
+    var updated = 0;
+    for (final asset in builtInAssets) {
+      final source = await _loadAsset(asset);
+      if (source == null) continue;
+      final existing = byName(source.name);
+      if (existing != null) {
+        // 内置源配置升级：保留用户的启用/停用状态。
+        if (_isNewerVersion(source.version, existing.version)) {
+          source.enabled = existing.enabled;
+          final index = _sources.indexOf(existing);
+          if (index >= 0) {
+            _sources[index] = source;
+            updated++;
+          }
         }
-      } catch (_) {}
+        if (!seeded.contains(source.name)) seeded.add(source.name);
+        continue;
+      }
+      if (seeded.contains(source.name)) continue;
+      _sources.add(source);
+      seeded.add(source.name);
+      added++;
     }
-    await prefs.setBool(_seededKey, true);
-    if (added) {
+    await prefs.setStringList(_seededNamesKey, seeded);
+    await prefs.setBool(_legacySeededKey, true);
+    if (added > 0 || updated > 0) {
       await _save();
+    }
+  }
+
+  static bool _isNewerVersion(String candidate, String current) {
+    final a = candidate.split('.').map(int.tryParse).toList();
+    final b = current.split('.').map(int.tryParse).toList();
+    final length = a.length > b.length ? a.length : b.length;
+    for (var i = 0; i < length; i++) {
+      final x = i < a.length ? (a[i] ?? 0) : 0;
+      final y = i < b.length ? (b[i] ?? 0) : 0;
+      if (x != y) return x > y;
+    }
+    return false;
+  }
+
+  /// 读取随 App 打包的全部内置源（设置页「内置音乐源」目录使用）。
+  Future<List<MusicSource>> loadBundledSources() async {
+    final result = <MusicSource>[];
+    for (final asset in builtInAssets) {
+      final source = await _loadAsset(asset);
+      if (source != null) result.add(source);
+    }
+    return result;
+  }
+
+  Future<MusicSource?> _loadAsset(String asset) async {
+    try {
+      final data = await rootBundle.loadString(asset);
+      return parseSourceJson(data);
+    } catch (_) {
+      return null;
     }
   }
 
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        _key, jsonEncode(_sources.map((s) => s.toJson()).toList()));
+      _key,
+      jsonEncode(_sources.map((s) => s.toJson()).toList()),
+    );
     notifyListeners();
   }
 
+  /// 添加或覆盖一个音乐源；同时记入「已处理的内置源」。
   Future<void> addSource(MusicSource source) async {
     _sources.removeWhere((s) => s.name == source.name);
     _sources.add(source);
+    _failStreak.remove(source.name);
+    await _markSeeded(source.name);
     await _save();
   }
 
   Future<void> removeSource(String name) async {
     _sources.removeWhere((s) => s.name == name);
+    _failStreak.remove(name);
     await _save();
   }
 
@@ -133,10 +203,20 @@ class SourceManager extends ChangeNotifier {
     for (final s in _sources) {
       if (s.name == name) {
         s.enabled = enabled;
+        if (enabled) _failStreak.remove(name);
         break;
       }
     }
     await _save();
+  }
+
+  Future<void> _markSeeded(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final seeded = prefs.getStringList(_seededNamesKey) ?? <String>[];
+    if (!seeded.contains(name)) {
+      seeded.add(name);
+      await prefs.setStringList(_seededNamesKey, seeded);
+    }
   }
 
   MusicSource? byName(String? name) {

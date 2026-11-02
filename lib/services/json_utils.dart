@@ -71,6 +71,24 @@ String? resolveTemplateUrl(String template, Map<dynamic, dynamic> item) {
   return result.isEmpty ? null : result;
 }
 
+/// 条目过滤：filter 中的每个字段路径都必须与期望值一致。
+/// 支持布尔、数字与字符串三种期望值；字段缺失时按不匹配处理（false 除外）。
+bool matchesFilter(dynamic item, Map<String, dynamic> filter) {
+  for (final entry in filter.entries) {
+    final actual = getPath(item, entry.key);
+    final expected = entry.value;
+    if (expected is bool) {
+      if ((actual == true) != expected) return false;
+    } else if (expected is num) {
+      final parsed = actual is num ? actual : num.tryParse(asText(actual));
+      if (parsed != expected) return false;
+    } else {
+      if (asText(actual) != expected.toString()) return false;
+    }
+  }
+  return true;
+}
+
 Song? extractSong(
   dynamic item,
   Mapping mapping,
@@ -78,6 +96,7 @@ Song? extractSong(
   String Function(String raw) resolveUrl,
 ) {
   if (item is! Map) return null;
+  if (!matchesFilter(item, mapping.filter)) return null;
   final id = asText(getPath(item, mapping.id));
   final title = asText(getPath(item, mapping.title));
   if (id.isEmpty || title.isEmpty) return null;
@@ -107,8 +126,9 @@ Song? extractSong(
     value = num.tryParse(d);
   }
   if (value != null) {
-    duration =
-        mapping.durationUnit == 'ms' ? (value / 1000).round() : value.round();
+    duration = mapping.durationUnit == 'ms'
+        ? (value / 1000).round()
+        : value.round();
   }
 
   final rawCover = asText(getPath(item, mapping.cover));

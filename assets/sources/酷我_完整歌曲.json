@@ -1,8 +1,9 @@
 {
   "name": "酷我 完整歌曲",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "baseUrl": "https://search.kuwo.cn",
   "headers": {},
+  "notes": "免登录，主流曲目覆盖好，解析成功率高",
   "search": {
     "path": "/r.s",
     "method": "GET",

@@ -73,9 +73,10 @@ GREP_QUERIES = [
 BUILTIN_TEMPLATES = [
     {
         "name": "酷狗 完整歌曲",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "baseUrl": "http://mobilecdn.kugou.com/api/v3",
         "headers": {},
+        "notes": "部分热门曲目需酷狗会员，未授权曲目无法播放",
         "search": {
             "path": "/search/song",
             "method": "GET",
@@ -103,9 +104,10 @@ BUILTIN_TEMPLATES = [
     },
     {
         "name": "Audius 音乐",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "baseUrl": "https://discoveryprovider.audius.co",
         "headers": {},
+        "notes": "海外开放平台，需可访问外网；仅展示可播放曲目",
         "search": {
             "path": "/v1/tracks/search",
             "method": "GET",
@@ -124,13 +126,15 @@ BUILTIN_TEMPLATES = [
             "urlTemplate": "https://discoveryprovider.audius.co/v1/tracks/{id}/stream?app_name=zephyr",
             "duration": "duration",
             "durationUnit": "s",
+            "filter": {"is_streamable": True, "is_delete": False},
         },
     },
     {
         "name": "酷我 完整歌曲",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "baseUrl": "https://search.kuwo.cn",
         "headers": {},
+        "notes": "免登录，主流曲目覆盖好，解析成功率高",
         "search": {
             "path": "/r.s",
             "method": "GET",
@@ -162,6 +166,66 @@ BUILTIN_TEMPLATES = [
             },
             "duration": "DURATION",
             "durationUnit": "s",
+        },
+    },
+    {
+        "name": "网易云音乐",
+        "version": "1.0.0",
+        "baseUrl": "https://music.163.com",
+        "headers": {
+            "Referer": "https://music.163.com/",
+            "Cookie": "os=pc; appver=2.9.7",
+        },
+        "notes": "公开搜索接口；无版权/VIP 曲目会自动跳过",
+        "search": {
+            "path": "/api/cloudsearch/pc",
+            "method": "GET",
+            "keywordParam": "s",
+            "params": {"type": 1, "offset": 0, "limit": 30, "total": "true"},
+            "body": {},
+        },
+        "mapping": {
+            "list": "result.songs",
+            "id": "id",
+            "title": "name",
+            "artist": "ar",
+            "album": "al",
+            "cover": "al.picUrl",
+            "url": "",
+            "urlTemplate": "https://music.163.com/song/media/outer/url?id={id}.mp3",
+            "duration": "dt",
+            "durationUnit": "ms",
+            "checkPlayable": True,
+            "checkPlayableOnSearch": True,
+        },
+    },
+    {
+        "name": "ccMixter 开放音乐",
+        "version": "1.0.0",
+        "baseUrl": "https://ccmixter.org",
+        "headers": {
+            "Accept": "application/json",
+            "Referer": "https://ccmixter.org/",
+        },
+        "notes": "CC 授权完整歌曲，英文关键词命中率更高",
+        "search": {
+            "path": "/api/query",
+            "method": "GET",
+            "keywordParam": "search",
+            "params": {"f": "json", "limit": 15},
+            "body": {},
+        },
+        "mapping": {
+            "list": "",
+            "id": "upload_id",
+            "title": "upload_name",
+            "artist": "user_name",
+            "album": "",
+            "cover": "",
+            "url": "files.0.download_url",
+            "duration": "",
+            "durationUnit": "s",
+            "checkPlayable": True,
         },
     },
 ]
@@ -504,6 +568,7 @@ def normalize_source(obj):
         "version": str(obj.get("version") or "1.0.0"),
         "baseUrl": base_url.rstrip("/"),
         "headers": as_str_map(obj.get("headers")),
+        "notes": str(obj.get("notes") or ""),
         "search": {
             "path": path,
             "method": method,
@@ -523,6 +588,17 @@ def normalize_source(obj):
             **({"urlResolve": resolved} if resolved else {}),
             "duration": str(m.get("duration") or "duration"),
             "durationUnit": str(m.get("durationUnit") or "s").lower(),
+            **(
+                {"filter": {str(k): v for k, v in m["filter"].items()}}
+                if isinstance(m.get("filter"), dict)
+                else {}
+            ),
+            **({"checkPlayable": True} if m.get("checkPlayable") is True else {}),
+            **(
+                {"checkPlayableOnSearch": True}
+                if m.get("checkPlayableOnSearch") is True
+                else {}
+            ),
         },
     }
 
@@ -602,6 +678,27 @@ def get_path(data, path):
     return cur
 
 
+def matches_filter(item, flt):
+    """与 App 内 matchesFilter 行为一致：所有条件都满足才保留。"""
+    if not isinstance(flt, dict) or not flt:
+        return True
+    for key, expected in flt.items():
+        actual = get_path(item, key)
+        if isinstance(expected, bool):
+            if (actual is True) != expected:
+                return False
+        elif isinstance(expected, (int, float)):
+            try:
+                if float(actual) != float(expected):
+                    return False
+            except (TypeError, ValueError):
+                return False
+        else:
+            if as_text(actual) != str(expected):
+                return False
+    return True
+
+
 def as_text(v):
     if v is None:
         return ""
@@ -662,6 +759,8 @@ def extract_songs(source, data):
     songs = []
     for item in lst:
         if not isinstance(item, dict):
+            continue
+        if not matches_filter(item, m.get("filter")):
             continue
         song_id = as_text(get_path(item, m.get("id", "")))
         title = as_text(get_path(item, m.get("title", "")))

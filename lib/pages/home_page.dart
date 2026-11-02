@@ -50,18 +50,14 @@ class _RecentCard extends StatelessWidget {
             song.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
+            style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
           Text(
             song.artist,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
+            style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
@@ -73,16 +69,29 @@ class _RecentCard extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  Future<void> _play(
+    BuildContext context,
+    List<Song> songs,
+    bool shuffle,
+  ) async {
+    final ok = shuffle
+        ? await PlayUtils.shuffleAll(songs)
+        : await PlayUtils.playAll(songs);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('无法获取播放地址')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('zephyr'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('zephyr'), centerTitle: false),
       body: AnimatedBuilder(
-        animation: Listenable.merge(
-            [LocalStore.instance, SourceManager.instance]),
+        animation: Listenable.merge([
+          LocalStore.instance,
+          SourceManager.instance,
+        ]),
         builder: (context, _) {
           final recents = LocalStore.instance.recents;
           final hasSources = SourceManager.instance.sources.isNotEmpty;
@@ -91,9 +100,8 @@ class HomePage extends StatelessWidget {
             children: [
               Text(
                 '发现好音乐',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               if (!hasSources)
@@ -112,17 +120,33 @@ class HomePage extends StatelessWidget {
                 children: [
                   Text(
                     '最近播放',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   if (recents.isNotEmpty)
-                    Text(
-                      '${recents.length} 首',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${recents.length} 首',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                        IconButton(
+                          tooltip: '随机播放最近',
+                          icon: const Icon(Icons.shuffle_rounded, size: 20),
+                          onPressed: () => _play(context, recents, true),
+                        ),
+                        IconButton(
+                          tooltip: '播放全部',
+                          icon: const Icon(Icons.play_circle_outline, size: 22),
+                          onPressed: () => _play(context, recents, false),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -136,9 +160,7 @@ class HomePage extends StatelessWidget {
                         Icon(
                           Icons.music_note_outlined,
                           size: 48,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -157,23 +179,24 @@ class HomePage extends StatelessWidget {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 1.35,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
                   itemCount: recents.length,
-                  itemBuilder: (context, i) =>
-                      _RecentCard(song: recents[i], onTap: () async {
-                    if (!await PlayUtils.playSongs(recents, i) &&
-                        context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('无法获取播放地址')),
-                      );
-                    }
-                  }),
+                  itemBuilder: (context, i) => _RecentCard(
+                    song: recents[i],
+                    onTap: () async {
+                      if (!await PlayUtils.playSongs(recents, i) &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('无法获取播放地址')),
+                        );
+                      }
+                    },
+                  ),
                 ),
             ],
           );

@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/song.dart';
@@ -43,9 +44,7 @@ class PlayerPage extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
-                    const Expanded(
-                      child: Center(child: Text('暂无播放内容')),
-                    ),
+                    const Expanded(child: Center(child: Text('暂无播放内容'))),
                   ],
                 );
               }
@@ -70,9 +69,7 @@ class PlayerPage extends StatelessWidget {
                             item.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
@@ -82,14 +79,20 @@ class PlayerPage extends StatelessWidget {
                                 : (item.album ?? ''),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 4),
+                          Text(
+                            '来自 ${item.extras?['sourceName'] ?? '未知音源'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 24),
                           _ProgressBar(item: item, format: _format),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           const _Controls(),
                           const SizedBox(height: 8),
                           _FavoriteButton(item: item),
@@ -152,8 +155,7 @@ class _MvSectionState extends State<_MvSection> {
   }
 
   Future<void> _resolve() async {
-    final keyword =
-        '${widget.item.artist ?? ''} ${widget.item.title}'.trim();
+    final keyword = '${widget.item.artist ?? ''} ${widget.item.title}'.trim();
     setState(() {
       _loading = true;
       _noMv = false;
@@ -167,8 +169,7 @@ class _MvSectionState extends State<_MvSection> {
       });
       return;
     }
-    final controller =
-        VideoPlayerController.networkUrl(Uri.parse(url));
+    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     try {
       await controller.initialize();
     } catch (_) {
@@ -270,8 +271,9 @@ class _MvSectionState extends State<_MvSection> {
                           icon: const Icon(Icons.close_rounded),
                           color: Colors.white,
                           style: IconButton.styleFrom(
-                            backgroundColor:
-                                Colors.black.withValues(alpha: 0.4),
+                            backgroundColor: Colors.black.withValues(
+                              alpha: 0.4,
+                            ),
                           ),
                           onPressed: _stopMv,
                         ),
@@ -284,9 +286,7 @@ class _MvSectionState extends State<_MvSection> {
           const SizedBox(height: 4),
           Text(
             _playing ? 'MV 播放中（音乐已暂停）' : '点击播放 MV（音乐会暂停）',
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
+            style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
@@ -294,7 +294,10 @@ class _MvSectionState extends State<_MvSection> {
     } else {
       child = const SizedBox.shrink();
     }
-    return AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: child);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: child,
+    );
   }
 }
 
@@ -376,8 +379,9 @@ class _ProgressBar extends StatelessWidget {
         final maxMs = total.inMilliseconds > 0
             ? total.inMilliseconds.toDouble()
             : position.inMilliseconds.toDouble() + 1;
-        final value =
-            position.inMilliseconds.clamp(0, maxMs.toInt()).toDouble();
+        final value = position.inMilliseconds
+            .clamp(0, maxMs.toInt())
+            .toDouble();
         return Column(
           children: [
             Slider(
@@ -423,12 +427,24 @@ class _Controls extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            StreamBuilder<bool>(
+              stream: playerHandler.shuffleModeEnabledStream,
+              builder: (context, snapshot) {
+                final enabled = snapshot.data ?? false;
+                return IconButton(
+                  tooltip: enabled ? '随机播放：开' : '随机播放：关',
+                  icon: const Icon(Icons.shuffle_rounded),
+                  color: enabled ? scheme.primary : scheme.onSurfaceVariant,
+                  onPressed: playerHandler.toggleShuffle,
+                );
+              },
+            ),
             IconButton(
-              iconSize: 40,
+              iconSize: 36,
               icon: const Icon(Icons.skip_previous_rounded),
               onPressed: () => playerHandler.skipToPrevious(),
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 8),
             IconButton(
               iconSize: 72,
               icon: Icon(
@@ -445,11 +461,33 @@ class _Controls extends StatelessWidget {
                 }
               },
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 8),
             IconButton(
-              iconSize: 40,
+              iconSize: 36,
               icon: const Icon(Icons.skip_next_rounded),
               onPressed: () => playerHandler.skipToNext(),
+            ),
+            StreamBuilder<LoopMode>(
+              stream: playerHandler.loopModeStream,
+              builder: (context, snapshot) {
+                final mode = snapshot.data ?? LoopMode.off;
+                return IconButton(
+                  tooltip: switch (mode) {
+                    LoopMode.off => '列表播完停止',
+                    LoopMode.all => '列表循环',
+                    LoopMode.one => '单曲循环',
+                  },
+                  icon: Icon(
+                    mode == LoopMode.one
+                        ? Icons.repeat_one_rounded
+                        : Icons.repeat_rounded,
+                  ),
+                  color: mode == LoopMode.off
+                      ? scheme.onSurfaceVariant
+                      : scheme.primary,
+                  onPressed: playerHandler.cycleLoopMode,
+                );
+              },
             ),
           ],
         );
