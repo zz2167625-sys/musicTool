@@ -72,6 +72,32 @@ GREP_QUERIES = [
 # 内置模板：公开、免密钥的音乐 API
 BUILTIN_TEMPLATES = [
     {
+        "name": "Audius 音乐",
+        "version": "2.0.0",
+        "baseUrl": "https://api.audius.co",
+        "headers": {},
+        "notes": "海外开放音乐平台，免费完整歌曲，需代理",
+        "search": {
+            "path": "/v1/tracks/search",
+            "method": "GET",
+            "keywordParam": "query",
+            "params": {"limit": 30},
+            "body": {},
+        },
+        "mapping": {
+            "list": "data",
+            "id": "id",
+            "title": "title",
+            "artist": "user.name",
+            "album": "",
+            "cover": "artwork.480x480",
+            "url": "",
+            "urlTemplate": "https://api.audius.co/v1/tracks/{id}/stream",
+            "duration": "duration",
+            "durationUnit": "s",
+        },
+    },
+    {
         "name": "猫耳FM",
         "version": "1.0.0",
         "baseUrl": "https://www.missevan.com",

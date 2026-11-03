@@ -14,7 +14,7 @@ class SourceManager extends ChangeNotifier {
 
   static const _key = 'music_sources';
   static const _legacySeededKey = 'builtin_sources_seeded_v3';
-  static const _seededNamesKey = 'builtin_source_names';
+  static const _seededNamesKey = 'builtin_source_names_v2';
 
   /// 内置音乐源（随 App 打包，首次启动自动导入）。
   /// 新增内置源会自动加入老用户列表；用户主动删除过的源不会被自动加回。
@@ -22,6 +22,7 @@ class SourceManager extends ChangeNotifier {
     'assets/sources/猫耳FM.json',
     'assets/sources/udio.json',
     'assets/sources/bilibili.json',
+    'assets/sources/Audius_音乐.json',
   ];
 
   /// 2.3.0 及更早版本内置过的源，用于升级时区分「老内置源」与「新增源」。
@@ -81,7 +82,6 @@ class SourceManager extends ChangeNotifier {
     'Deezer 试听',
     '酷我 完整歌曲',
     '酷狗 完整歌曲',
-    'Audius 音乐',
     '网易云音乐',
     'ccMixter 开放音乐',
   ];
