@@ -1,0 +1,26 @@
+{
+  "name": "bilibili",
+  "version": "1.0.0",
+  "baseUrl": "https://api.bilibili.com",
+  "adapter": "bilibili",
+  "headers": {},
+  "search": {
+    "path": "",
+    "method": "GET",
+    "keywordParam": "",
+    "params": {},
+    "body": {}
+  },
+  "mapping": {
+    "list": "",
+    "id": "id",
+    "title": "title",
+    "artist": "",
+    "album": "",
+    "cover": "",
+    "url": "",
+    "duration": "duration",
+    "durationUnit": "s"
+  },
+  "notes": "B站视频音频流（播放时解析）"
+}

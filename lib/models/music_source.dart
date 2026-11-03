@@ -162,6 +162,7 @@ class MusicSource {
   final SearchConfig search;
   final Mapping mapping;
   final String notes;
+  final String adapter;
   bool enabled;
 
   MusicSource({
@@ -172,6 +173,7 @@ class MusicSource {
     required this.search,
     required this.mapping,
     this.notes = '',
+    this.adapter = '',
     this.enabled = true,
   });
 
@@ -197,6 +199,7 @@ class MusicSource {
       search: SearchConfig.fromJson(searchJson.cast<String, dynamic>()),
       mapping: Mapping.fromJson(mappingJson.cast<String, dynamic>()),
       notes: json['notes']?.toString() ?? '',
+      adapter: json['adapter']?.toString() ?? '',
       enabled: json['enabled'] != false,
     );
   }
@@ -209,6 +212,7 @@ class MusicSource {
     'search': search.toJson(),
     'mapping': mapping.toJson(),
     if (notes.isNotEmpty) 'notes': notes,
+    if (adapter.isNotEmpty) 'adapter': adapter,
     'enabled': enabled,
   };
 

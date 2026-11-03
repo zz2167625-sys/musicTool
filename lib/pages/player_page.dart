@@ -144,6 +144,10 @@ class _MvSectionState extends State<_MvSection> {
 
   @override
   void dispose() {
+    // MV 播放中退出页面时恢复音乐播放，避免音乐停留在暂停状态
+    if (_playing) {
+      playerHandler.play();
+    }
     _disposeController();
     super.dispose();
   }

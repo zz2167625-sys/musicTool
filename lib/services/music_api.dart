@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/music_source.dart';
 import '../models/song.dart';
+import 'bili_api.dart';
 import 'json_utils.dart';
 import 'source_manager.dart';
 
@@ -80,13 +81,33 @@ class MusicApi {
     bool recordHealth = true,
   }) async {
     try {
+      if (source.adapter == 'bilibili') {
+        final songs = await BiliApi.searchSongs(keyword, source.name);
+        if (songs.isEmpty) {
+          if (recordHealth) {
+            SourceManager.instance.recordSourceFailure(source.name);
+          }
+          return SourceSearchReport(
+            sourceName: source.name,
+            songs: const [],
+            error: '没有可用结果',
+          );
+        }
+        if (recordHealth) {
+          SourceManager.instance.recordSourceSuccess(source.name);
+        }
+        return SourceSearchReport(sourceName: source.name, songs: songs);
+      }
       final headers = {...source.headers, 'User-Agent': 'zephyr/2.3'};
       http.Response resp;
       if (source.search.method == 'POST') {
-        final body = {
-          source.search.keywordParam: keyword,
-          ...source.search.body,
-        };
+        final bodyText = jsonEncode(source.search.body);
+        final body = bodyText.contains('{keyword}')
+            ? _substituteKeyword(source.search.body, keyword)
+            : {
+                source.search.keywordParam: keyword,
+                ...source.search.body,
+              };
         resp = await http
             .post(
               source.buildSearchUri(),
@@ -189,10 +210,36 @@ class MusicApi {
     return resolved;
   }
 
+  static dynamic _substituteKeyword(dynamic value, String keyword) {
+    if (value is String) return value.replaceAll('{keyword}', keyword);
+    if (value is Map) {
+      return value.map(
+          (k, v) => MapEntry(k, _substituteKeyword(v, keyword)));
+    }
+    if (value is List) {
+      return value.map((e) => _substituteKeyword(e, keyword)).toList();
+    }
+    return value;
+  }
+
   static Future<Song?> _resolveOne(Song song) async {
     final source = SourceManager.instance.byName(song.sourceName);
     if (source == null) {
       return song.url.isEmpty ? null : song;
+    }
+    if (source.adapter == 'bilibili') {
+      final cached = _urlCache[song.uid];
+      if (cached != null &&
+          DateTime.now().millisecondsSinceEpoch - cached.at <
+              _urlCacheTtl.inMilliseconds) {
+        return cached.url.isEmpty ? null : song.copyWith(url: cached.url);
+      }
+      final url = await BiliApi.audioUrl(song.id) ?? '';
+      _urlCache[song.uid] = (
+        url: url,
+        at: DateTime.now().millisecondsSinceEpoch,
+      );
+      return url.isEmpty ? null : song.copyWith(url: url);
     }
     final headers = {...source.headers, 'User-Agent': 'zephyr/2.3'};
 

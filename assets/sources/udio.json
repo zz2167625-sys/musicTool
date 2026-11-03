@@ -1,0 +1,35 @@
+{
+  "name": "udio",
+  "version": "1.0.0",
+  "baseUrl": "https://www.udio.com",
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61"
+  },
+  "search": {
+    "path": "/api/songs/search",
+    "method": "POST",
+    "keywordParam": "ignore",
+    "params": {},
+    "body": {
+      "searchQuery": {
+        "sort": "plays",
+        "searchTerm": "{keyword}"
+      },
+      "pageParam": 0,
+      "pageSize": 30,
+      "trendingId": "93de406e-bdc1-40a6-befd-90637a362158"
+    }
+  },
+  "mapping": {
+    "list": "data",
+    "id": "id",
+    "title": "title",
+    "artist": "artist",
+    "album": "",
+    "cover": "image_path",
+    "url": "song_path",
+    "duration": "duration",
+    "durationUnit": "s"
+  },
+  "notes": "AI 音乐平台，需代理"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "猫耳FM",
+  "version": "1.0.0",
+  "baseUrl": "https://www.missevan.com",
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
+    "Accept": "application/json"
+  },
+  "search": {
+    "path": "/sound/getsearch",
+    "method": "GET",
+    "keywordParam": "s",
+    "params": {
+      "p": 1,
+      "type": 3,
+      "page_size": 30
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "info.Datas",
+    "id": "id",
+    "title": "soundstr",
+    "artist": "username",
+    "album": "",
+    "cover": "front_cover",
+    "url": "",
+    "urlResolve": {
+      "path": "/sound/getsound?soundid={id}",
+      "method": "GET",
+      "urlPath": "info.sound.soundurl",
+      "body": {}
+    },
+    "duration": "duration",
+    "durationUnit": "ms"
+  },
+  "notes": "广播剧 / 有声内容"
+}

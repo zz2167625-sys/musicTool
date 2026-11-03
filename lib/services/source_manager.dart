@@ -19,15 +19,19 @@ class SourceManager extends ChangeNotifier {
   /// 内置音乐源（随 App 打包，首次启动自动导入）。
   /// 新增内置源会自动加入老用户列表；用户主动删除过的源不会被自动加回。
   static const builtInAssets = [
-    'assets/sources/酷我_完整歌曲.json',
-    'assets/sources/酷狗_完整歌曲.json',
-    'assets/sources/Audius_音乐.json',
-    'assets/sources/网易云音乐.json',
-    'assets/sources/ccMixter_开放音乐.json',
+    'assets/sources/猫耳FM.json',
+    'assets/sources/udio.json',
+    'assets/sources/bilibili.json',
   ];
 
-  /// 2.2.0 及更早版本内置过的源，用于升级时区分「老内置源」与「新增源」。
-  static const _legacyBuiltInNames = ['酷我 完整歌曲', '酷狗 完整歌曲', 'Audius 音乐'];
+  /// 2.3.0 及更早版本内置过的源，用于升级时区分「老内置源」与「新增源」。
+  static const _legacyBuiltInNames = [
+    '酷我 完整歌曲',
+    '酷狗 完整歌曲',
+    'Audius 音乐',
+    '网易云音乐',
+    'ccMixter 开放音乐',
+  ];
 
   final List<MusicSource> _sources = [];
   final Map<String, int> _failStreak = {};
@@ -75,6 +79,11 @@ class SourceManager extends ChangeNotifier {
     '网易云 直链',
     'iTunes 试听',
     'Deezer 试听',
+    '酷我 完整歌曲',
+    '酷狗 完整歌曲',
+    'Audius 音乐',
+    '网易云音乐',
+    'ccMixter 开放音乐',
   ];
 
   Future<void> load() async {
