@@ -221,33 +221,83 @@ class _SearchPageState extends State<SearchPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (visible.isNotEmpty) {
-      return ListView.builder(
-        itemCount: visible.length + 1,
-        itemBuilder: (context, i) {
-          if (i == 0) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Row(
-                children: [
-                  Text(
-                    '共 ${_all.length} 首 · ${_all.map((s) => s.sourceName).toSet().length} 个音源',
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                  const Spacer(),
-                  if (_filterSource != null)
+      if (_filterSource != null) {
+        return ListView.builder(
+          itemCount: visible.length + 1,
+          itemBuilder: (context, i) {
+            if (i == 0) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: Row(
+                  children: [
+                    Text(
+                      '共 ${_all.length} 首 · ${_all.map((s) => s.sourceName).toSet().length} 个音源',
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                    const Spacer(),
                     TextButton(
                       onPressed: () => setState(() => _filterSource = null),
                       child: const Text('查看全部'),
                     ),
-                ],
-              ),
-            );
-          }
-          final song = visible[i - 1];
-          return SongTile(song: song, onTap: () => _play(i - 1));
-        },
-      );
+                  ],
+                ),
+              );
+            }
+            final song = visible[i - 1];
+            return SongTile(song: song, onTap: () => _play(i - 1));
+          },
+        );
+      }
+      // 按音乐源分组展示
+      final reports = _report?.sources ?? const <SourceSearchReport>[];
+      final groups = <(String, List<Song>)>[
+        for (final r in reports)
+          if (_countOf(r.sourceName) > 0)
+            (
+              r.sourceName,
+              _all.where((s) => s.sourceName == r.sourceName).toList(),
+            ),
+      ];
+      final children = <Widget>[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          child: Text(
+            '共 ${_all.length} 首 · ${groups.length} 个音源',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+        for (final (name, songs) in groups) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                Icon(Icons.album_outlined, size: 16, color: scheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  name,
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${songs.length} 首',
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          ...songs.map(
+            (song) => SongTile(
+              song: song,
+              onTap: () => _playSongs(songs, songs.indexOf(song)),
+            ),
+          ),
+        ],
+      ];
+      return ListView(children: children);
     }
     return _buildIdle(scheme);
   }
@@ -299,8 +349,9 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Future<void> _play(int index) async {
-    final songs = _visible;
+  Future<void> _play(int index) => _playSongs(_visible, index);
+
+  Future<void> _playSongs(List<Song> songs, int index) async {
     if (index < 0 || index >= songs.length) return;
     final ok = await PlayUtils.playSongs(songs, index);
     if (!ok && mounted) {
