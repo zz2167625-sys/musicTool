@@ -1,0 +1,36 @@
+{
+  "name": "GD 网易云",
+  "version": "1.0.0",
+  "baseUrl": "https://music-api.gdstudio.xyz",
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+  },
+  "search": {
+    "path": "/api.php",
+    "method": "GET",
+    "keywordParam": "name",
+    "params": {
+      "types": "search",
+      "source": "netease"
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "",
+    "id": "id",
+    "title": "name",
+    "artist": "artist",
+    "album": "album",
+    "cover": "",
+    "url": "",
+    "urlResolve": {
+      "path": "https://music-api.gdstudio.xyz/api.php?types=url&source=netease&id={id}&br=128",
+      "method": "GET",
+      "urlPath": "url",
+      "body": {}
+    },
+    "duration": "",
+    "durationUnit": "s"
+  },
+  "notes": "第三方聚合接口，服务器端登录，完整歌曲"
+}

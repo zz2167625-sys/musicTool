@@ -23,6 +23,10 @@ class SourceManager extends ChangeNotifier {
     'assets/sources/udio.json',
     'assets/sources/bilibili.json',
     'assets/sources/Audius_音乐.json',
+    'assets/sources/GD_网易云.json',
+    'assets/sources/yuncan_网易云.json',
+    'assets/sources/yuncan_酷狗.json',
+    'assets/sources/yuncan_酷我.json',
   ];
 
   /// 2.3.0 及更早版本内置过的源，用于升级时区分「老内置源」与「新增源」。

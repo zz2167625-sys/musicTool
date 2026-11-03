@@ -98,7 +98,7 @@ class MusicApi {
         }
         return SourceSearchReport(sourceName: source.name, songs: songs);
       }
-      final headers = {...source.headers, 'User-Agent': 'zephyr/2.3'};
+      final headers = {'User-Agent': 'zephyr/2.3', ...source.headers};
       http.Response resp;
       if (source.search.method == 'POST') {
         final bodyText = jsonEncode(source.search.body);
@@ -241,7 +241,7 @@ class MusicApi {
       );
       return url.isEmpty ? null : song.copyWith(url: url);
     }
-    final headers = {...source.headers, 'User-Agent': 'zephyr/2.3'};
+    final headers = {'User-Agent': 'zephyr/2.3', ...source.headers};
 
     var url = song.url;
     final config = source.mapping.urlResolve;

@@ -1,5 +1,5 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "url": "https://github.com/zz2167625-sys/musicTool/releases/latest",
-  "notes": "1. 新增内置源「Audius 音乐」（api.audius.co）：实测免费、免登录、完整歌曲，需代理访问\n2. 测试结论：网易云插件搜索可用但取链接口匿名失效，无法完整播放，未加入"
+  "notes": "1. 新增 4 个聚合音源：GD 网易云（完整 mp3 直链）、yuncan 网易云/酷狗/酷我（302 直跳音频，播放前自动剔除不可播曲目）\n2. 修复：音源自带请求头不再被默认 UA 覆盖（第三方接口 UA 校验）\n3. 内置音源共 8 个"
 }

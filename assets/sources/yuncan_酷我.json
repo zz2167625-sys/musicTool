@@ -1,0 +1,33 @@
+{
+  "name": "yuncan 酷我",
+  "version": "1.0.0",
+  "baseUrl": "https://music.yuncan.xyz",
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+  },
+  "search": {
+    "path": "/api",
+    "method": "GET",
+    "keywordParam": "id",
+    "params": {
+      "server": "kuwo",
+      "type": "search",
+      "limit": 30
+    },
+    "body": {}
+  },
+  "mapping": {
+    "list": "songs",
+    "id": "id",
+    "title": "name",
+    "artist": "singer",
+    "album": "",
+    "cover": "",
+    "url": "",
+    "urlTemplate": "https://music.yuncan.xyz/api?server=kuwo&type=url&id={id}",
+    "duration": "",
+    "durationUnit": "s",
+    "checkPlayable": true
+  },
+  "notes": "第三方聚合接口，播放地址 302 直跳音频"
+}
